@@ -3,9 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>SmartStock ERP</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Test Form!</h1>
+    <header class="topbar">
+        <div class="titletext"><strong>SmartStock ERP</strong></div>
+        <nav class="topnav">
+            <a href="#">Dashboard</a>
+            <a href="#">Inventory</a>
+            <a href="#">Purchase Orders</a>
+            <a href="#">Transfer Orders</a>
+        </nav>
+    </header>
+
+    <main class="dashboard">
+        <h2>Dashboard Overview</h2>
+        <div class="card-container">
+            <div class="card">
+                <h3>Total Items</h3>
+                <p>1,234</p>
+            </div>
+            <div class="card">
+                <h3>Open Orders</h3>
+                <p>28</p>
+            </div>
+            <div class="card">
+                <h3>Shipped</h3>
+                <p>10</p>
+            </div>
+        </div>
+        <section class="section-table">
+            <h2>Recent Purchase Orders</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>PO ID</th>
+                        <th>Customer ID</th>
+                        <th>Order Date</th>
+                        <th>Est. Delivery Date</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PO345</td>
+                        <td>Acme Inc.</td>
+                        <td>04-11-2025</td>
+                        <td>04-28-2025</td>
+                        <td>250</td>
+                        <td>Pending Fulfillment</td>
+                    </tr>
+                    <tr>
+                        <td>PO789</td>
+                        <td>Walmart</td>
+                        <td>03-24-2025</td>
+                        <td>04-01-2025</td>
+                        <td>750</td>
+                        <td>Shipped</td>
+                    </tr>
+                    <tr>
+                        <td>PO111</td>
+                        <td>Target</td>
+                        <td>03-03-2025</td>
+                        <td>04-01-2025</td>
+                        <td>400</td>
+                        <td>Received</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="section-table">
+            <h2>Recent Transfer Orders</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>PO ID</th>
+                        <th>Customer</th>
+                        <th>Order Date</th>
+                        <th>Est. Delivery Date</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>TO123</td>
+                        <td>South Warehouse A</td>
+                        <td>04-02-2025</td>
+                        <td>04-18-2025</td>
+                        <td>50</td>
+                        <td>Received</td>
+                    </tr>
+                    <tr>
+                        <td>TO456</td>
+                        <td>North Warehouse B</td>
+                        <td>02-15-2025</td>
+                        <td>02-28-2025</td>
+                        <td>123</td>
+                        <td>Shipped</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
 </body>
 </html>
