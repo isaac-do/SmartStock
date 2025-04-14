@@ -20,7 +20,7 @@
 
     <main class="dashboard">
         <section class="section-table">
-            <h2>Customer Management</h2>
+            <h1>Customer Management</h2>
             <table>
                 <thead>
                     <tr>
@@ -78,6 +78,86 @@
                 </tbody>
             </table>
         </section>
+        <br>
+        <br>
+
+        <h1>Vendor Records</h2>
+        <table>
+        <thead>
+            <tr>
+            <th>Vendor ID</th>
+            <th>Vendor Name</th>
+            <th>Contact Person</th>
+            <th>Address</th>
+            <th>Payment Terms</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <td>V001</td>
+            <td>Acme Supplies</td>
+            <td>Jane Doe</td>
+            <td>123 Main St, Chicago, IL</td>
+            <td>Net 30</td>
+            </tr>
+            <tr>
+            <td>V002</td>
+            <td>Bright Paper Co.</td>
+            <td>Mike Wilson</td>
+            <td>456 Elm Rd, Dallas, TX</td>
+            <td>Net 15</td>
+            </tr>
+            <tr>
+            <td>V003</td>
+            <td>Global Office</td>
+            <td>Susan Lee</td>
+            <td>789 Maple Ln, San Jose, CA</td>
+            <td>Net 45</td>
+            </tr>
+        </tbody>
+        </table>
+
+        <br>
+        <h2>Add New Vendor</h2>
+        <br>
+        <form>
+        <label for="vendor_name">Vendor Name:</label>
+        <input type="text" id="vendor_name" name="vendor_name"><br><br>
+
+        <label for="contact">Contact Person:</label>
+        <input type="text" id="contact" name="contact"><br><br>
+
+        <label for="address">Address:</label>
+        <input type="text" id="address" name="address"><br><br>
+
+        <label for="payment_terms">Payment Terms:</label>
+        <input type="text" id="payment_terms" name="payment_terms"><br><br>
+
+        <button type="submit" class="btn">Add Vendor</button>
+        </form>
+        <br>
+        <br>
+
+
+        <h2>Update Vendor</h2>
+        <form>
+        <label for="vendor_id">Vendor ID:</label>
+        <input type="text" id="vendor_id" name="vendor_id"><br><br>
+
+        <label for="updated_contact">New Contact:</label>
+        <input type="text" id="updated_contact" name="updated_contact"><br><br>
+
+        <label for="updated_address">New Address:</label>
+        <input type="text" id="updated_address" name="updated_address"><br><br>
+
+        <label for="updated_payment_terms">New Payment Terms:</label>
+        <input type="text" id="updated_payment_terms" name="updated_payment_terms"><br><br>
+
+        <button type="submit" class="btn">Update Vendor</button>
+        </form>
+
+
+
     </main>
 </body>
 </html>
