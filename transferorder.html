@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartStock ERP</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <header class="topbar">
         <div class="titletext"><strong>SmartStock ERP</strong></div>
@@ -17,41 +19,133 @@
             <a href="management.html">Management</a>
         </nav>
     </header>
-    
-    <main class="dashboard">
-        <section class="section-table">
-            <h1>Transfer Orders</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Transfer ID</th>
-                        <th>Transfer Date</th>
-                        <th>From Location</th>
-                        <th>To Location</th>
-                        <th>Item</th>
-                        <th>Quantity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>T001</td>
-                        <td>01/01/25</td>
-                        <td>Warehouse A</td>
-                        <td>Store B</td>
-                        <td>Office Chair</td>
-                        <td>10</td>
-                    </tr>
-                    <tr>
-                        <td>T002</td>
-                        <td>03/10/23</td>
-                        <td>Warehouse B</td>
-                        <td>Store A</td>
-                        <td>Pens</td>
-                        <td>20</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-    </main>
+
+    <div class="dashboard">
+        <h1>Transfer Orders</h1>
+        <div class="actions">
+            <button class="btn" onclick="showCreateForm()">Create Transfer Order</button>
+            <input type="text" id="searchInput" placeholder="Search TO ID" />
+            <button class="btn" onclick="">Search</button>
+        </div>
+
+        <!-- This is the TO create form-->
+        <div id="createForm" class="toggle-form">
+            <h2>Create New Transfer Order</h2>
+            <label for="to_id">Transfer ID</label>
+            <input type="text" id="to_id" name="to_id" />
+
+            <label for="transfer_date">Transfer Date</label>
+            <input type="date" id="transfer_date" name="transfer_date" />
+
+            <label for="from_location">From Location</label>
+            <input type="text" id="from_location" name="from_location" />
+
+            <label for="to_location">To Location</label>
+            <input type="text" id="to_location" name="to_location" />
+
+            <label for="item_id">Item ID</label>
+            <input type="text" id="item_id" name="item_id" />
+
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" name="quantity" />
+
+            <button class="btn" onclick="alert('TO Created.')">Create</button>
+        </div>
+        <!-- This is the TO edit form-->
+        <div id="editForm" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Edit Transfer Order</h2>
+                <div class="form-group">
+                    <label>Transfer ID</label>
+                    <input type="text" id="edit_to_id" name="edit_to_id" disabled />
+                </div>
+                <div class="form-group">
+                    <label>Transfer Date</label>
+                    <input type="date" id="edit_transfer_date" name="edit_transfer_date" />
+                </div>
+                <div class="form-group">
+                    <label>From Location</label>
+                    <input type="text" id="edit_from_location" name="edit_from_location" />
+                </div>
+                <div class="form-group">
+                    <label>To Location</label>
+                    <input type="text" id="edit_to_location" name="edit_to_location" />
+                </div>
+                <div class="form-group">
+                    <label>Item ID</label>
+                    <input type="text" id="edit_item_id" name="edit_item_id" />
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="edit_quantity" name="edit_quantity" />
+                </div>
+                <button class="btn" onclick="alert('Changes saved.')">Save Changes</button>
+                <button class="btn btn-secondary" onclick="closeEditForm()">Cancel</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Transfer ID</th>
+                    <th>Transfer Date</th>
+                    <th>From Location</th>
+                    <th>To Location</th>
+                    <th>Item ID</th>
+                    <th>Quantity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>T001</td>
+                    <td>01-01-2025</td>
+                    <td>Warehouse A</td>
+                    <td>Store B</td>
+                    <td>ITEM002</td>
+                    <td>10</td>
+                    <td class="actions-row">
+                        <button class="btn"
+                            onclick="showEditForm('T001', '2025-01-01', 'Warehouse A', 'Store B', 'ITEM002', '10')">Edit</button>
+                        <button class="btn">Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>T002</td>
+                    <td>03-10-2023</td>
+                    <td>Warehouse B</td>
+                    <td>Store A</td>
+                    <td>ITEM001</td>
+                    <td>20</td>
+                    <td class="actions-row">
+                        <button class="btn"
+                            onclick="showEditForm('T002', '2023-03-10', 'Warehouse B', 'Store A', 'ITEM001', '20')">Edit</button>
+                        <button class="btn">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function showCreateForm() {
+            const form = document.getElementById('createForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('editForm').style.display = 'none';
+        }
+
+        function showEditForm(to_id, transfer_date, from_location, to_location, item_id, quantity) {
+            document.getElementById('edit_to_id').value = to_id;
+            document.getElementById('edit_transfer_date').value = transfer_date;
+            document.getElementById('edit_from_location').value = from_location;
+            document.getElementById('edit_to_location').value = to_location;
+            document.getElementById('edit_item_id').value = item_id;
+            document.getElementById('edit_quantity').value = quantity;
+            document.getElementById('editForm').style.display = 'flex';
+        }
+
+        function closeEditForm() {
+            document.getElementById('editForm').style.display = 'none';
+        }
+    </script>
 </body>
+
 </html>
