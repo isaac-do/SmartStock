@@ -174,9 +174,11 @@
                     </tr>
                 </tbody>
             </table>
-            </section>
+        </section>
     </div>
-    <h1>Supplier Records</h2>
+
+    <div class="dashboard">
+    <h1>Supplier Records</h1>
         <div class="actions">
             <button class="btn" onclick="showSupplierCreateForm()">Create Supplier Record</button>
             <input type="text" id="searchInput" placeholder="Search Supplier ID" />
@@ -247,7 +249,7 @@
                     <th>Address</th>
                     <th>Email</th>
                     <th>Phone Number</th>
-                    <th>Phone Number</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -292,8 +294,10 @@
                 </tr>
             </tbody>
         </table>
+    </div>
 
-<h1>Locations</h2>
+    <div class="dashboard">
+    <h1>Locations</h2>
     <div class="actions">
         <button class="btn" onclick="showLocationCreateForm()">Create Location Record</button>
         <input type="text" id="searchInput" placeholder="Search Location" />
@@ -347,6 +351,7 @@
                 <th>Location Type</th>
                 <th>Location Name</th>
                 <th>Location ID</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -363,12 +368,12 @@
             </tr>
         </tbody>
     </table>
+    </div>
 
 
 
-
-
-    <h1>Sales Representative</h2>
+    <div class="dashboard">
+    <h1>Sales Representative</h1>
         <div class="actions">
             <button class="btn" onclick="showSalesCreateForm()">Create Sales Rep Record</button>
             <input type="text" id="searchInput" placeholder="Search Sales ID" />
@@ -422,13 +427,13 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Phone Number</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>SUP001</td>
                     <td>John Smith</td>
-                    <td>sajfljkalskdj;@gmail.com</td>
                     <td>acme@supplies.com</td>
                     <td>(312) 555-0198</td>
                     <td class="actions-row">
@@ -439,7 +444,7 @@
                 </tr>
             </tbody>
         </table>
-
+    </div>
 
 
     <script>
@@ -523,6 +528,7 @@
             document.getElementById('editSalesForm').style.display = 'none';
         }
     </script>
+    </div>
 </body>
 
 </html>
