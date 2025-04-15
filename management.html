@@ -292,51 +292,238 @@
                 </tr>
             </tbody>
         </table>
-        <script>
-            function showCustomerCreateForm() {
-                const form = document.getElementById('createCustomerForm');
-                form.style.display = form.style.display === 'block' ? 'none' : 'block';
-                document.getElementById('editForm').style.display = 'none';
-            }
 
-            function showSupplierCreateForm() {
-                const form = document.getElementById('createSupplierForm');
-                form.style.display = form.style.display === 'block' ? 'none' : 'block';
-                document.getElementById('editForm').style.display = 'none';
-            }
+<h1>Locations</h2>
+    <div class="actions">
+        <button class="btn" onclick="showLocationCreateForm()">Create Location Record</button>
+        <input type="text" id="searchInput" placeholder="Search Location" />
+        <button class="btn" onclick="">Search</button>
+    </div>
 
-            function showCustomerEditForm(customer_id, customer_name, customer_type, sales_rep_id, billing_address, ship_address, email, phone_number) {
-                document.getElementById('edit_customer_id').value = customer_id;
-                document.getElementById('edit_cust_name').value = customer_name;
-                document.getElementById('edit_cust_type').value = customer_type;
-                document.getElementById('edit_sales_rep_id').value = sales_rep_id;
-                document.getElementById('edit_bill_address').value = billing_address;
-                document.getElementById('edit_ship_address').value = ship_address;
-                document.getElementById('edit_cust_email').value = email;
-                document.getElementById('edit_phone_number').value = phone_number;
+    <!-- This is the location record create form-->
+    <div id="createLocationForm" class="toggle-form">
+        <h2>Create New Location Record</h2>
+        <label for="address">Address</label>
+        <input type="text" id="address" name="address" />
 
-                document.getElementById('editCustomerForm').style.display = 'flex';
-            }
+        <label for="location_type">Location Type</label>
+        <input type="text" id="location_type" name="location_type" />
 
-            function showSupplierEditForm(supplier_id, supplier_name, supp_sales_rep_id, supplier_address, supplier_email, supplier_phone_number) {
-                document.getElementById('edit_supp_id').value = supplier_id;
-                document.getElementById('edit_supp_name').value = supplier_name;
-                document.getElementById('edit_supp_sales_rep_id').value = supp_sales_rep_id;
-                document.getElementById('edit_supp_address').value = supplier_address;
-                document.getElementById('edit_supp_email').value = supplier_email;
-                document.getElementById('edit_supp_phone_number').value = supplier_phone_number;
+        <label for="location_name">Location Name</label>
+        <input type="text" id="supp_sales_rep_id" name="supp_sales_rep_id" />
 
-                document.getElementById('editSupplierForm').style.display = 'flex';
-            }
+        <label for="location_id">Location ID</label>
+        <input type="text" id="location_id" name="location_id" />
+        <button class="btn" onclick="alert('Location Record Created.')">Create</button>
+    </div>
+    <!-- This is the location record edit form-->
+    <div id="editLocationForm" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Edit Location Record</h2>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="address" name="address" disabled />
+            </div>
+            <div class="form-group">
+                <label>Location Type</label>
+                <input type="text" id="location_type" name="location_type" />
+            </div>
+            <div class="form-group">
+                <label>Location Name</label>
+                <input type="text" id="location_name" name="location_name" />
+            </div>
+            <div class="form-group">
+                <label>Location ID</label>
+                <input type="text" id="location_id" name="location_id" />
+            </div>
+            <button class="btn" onclick="alert('Changes saved.')">Save Changes</button>
+            <button class="btn btn-secondary" onclick="closeLocationEditForm()">Cancel</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Location Type</th>
+                <th>Location Name</th>
+                <th>Location ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>SUP001</td>
+                <td>Acme Supplies</td>
+                <td>SR100</td>
+                <td>123 Main St, Chicago, IL</td>
+                <td class="actions-row">
+                    <button class="btn"
+                        onclick="showLocationEditForm('SUP001', 'Acme Supplies', 'SR100', '123 Main St, Chicago, IL')">Edit</button>
+                    <button class="btn">Delete</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-            function closeCustomerEditForm() {
-                document.getElementById('editCustomerForm').style.display = 'none';
-            }
 
-            function closeSupplierEditForm() {
-                document.getElementById('editSupplierForm').style.display = 'none';
-            }
-        </script>
+
+
+
+    <h1>Sales Representative</h2>
+        <div class="actions">
+            <button class="btn" onclick="showSalesCreateForm()">Create Sales Rep Record</button>
+            <input type="text" id="searchInput" placeholder="Search Sales ID" />
+            <button class="btn" onclick="">Search</button>
+        </div>
+
+        <!-- This is the sales record create form-->
+        <div id="createSalesForm" class="toggle-form">
+            <h2>Create New Sales Record</h2>
+            <label for="sales_id">Sales Rep ID</label>
+            <input type="text" id="sales_id" name="sales_id" />
+
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" />
+
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email" />
+
+            <label for="phone_number">Phone Number</label>
+            <input type="text" id="phone_number" name="phone_number" />
+            <button class="btn" onclick="alert('Sales Rep Record Created.')">Create</button>
+        </div>
+        <!-- This is the sales record edit form-->
+        <div id="editSalesForm" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Edit Sales Record</h2>
+                <div class="form-group">
+                    <label>Sales ID</label>
+                    <input type="text" id="edit_sales_id" name="edit_sales_id" disabled />
+                </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="edit_sales_name" name="edit_sales_name" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" id="edit_sales_email" name="edit_sales_email" />
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="edit_sales_phone_number" name="edit_sales_phone_number" />
+                </div>
+                <button class="btn" onclick="alert('Changes saved.')">Save Changes</button>
+                <button class="btn btn-secondary" onclick="closeSalesEditForm()">Cancel</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sales Rep ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SUP001</td>
+                    <td>John Smith</td>
+                    <td>sajfljkalskdj;@gmail.com</td>
+                    <td>acme@supplies.com</td>
+                    <td>(312) 555-0198</td>
+                    <td class="actions-row">
+                        <button class="btn"
+                            onclick="showSalesEditForm('SUP001', 'Acme Supplies', 'SR100', '123 Main St, Chicago, IL')">Edit</button>
+                        <button class="btn">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+
+
+    <script>
+        function showCustomerCreateForm() {
+            const form = document.getElementById('createCustomerForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('editForm').style.display = 'none';
+        }
+
+        function showSupplierCreateForm() {
+            const form = document.getElementById('createSupplierForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('editForm').style.display = 'none';
+        }
+
+        function showLocationCreateForm() {
+            const form = document.getElementById('createLocationForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('editForm').style.display = 'none';
+        }
+
+        function showSalesCreateForm() {
+            const form = document.getElementById('createSalesForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('editForm').style.display = 'none';
+        }
+
+        function showCustomerEditForm(customer_id, customer_name, customer_type, sales_rep_id, billing_address, ship_address, email, phone_number) {
+            document.getElementById('edit_customer_id').value = customer_id;
+            document.getElementById('edit_cust_name').value = customer_name;
+            document.getElementById('edit_cust_type').value = customer_type;
+            document.getElementById('edit_sales_rep_id').value = sales_rep_id;
+            document.getElementById('edit_bill_address').value = billing_address;
+            document.getElementById('edit_ship_address').value = ship_address;
+            document.getElementById('edit_cust_email').value = email;
+            document.getElementById('edit_phone_number').value = phone_number;
+
+            document.getElementById('editCustomerForm').style.display = 'flex';
+        }
+
+        function showSupplierEditForm(supplier_id, supplier_name, supp_sales_rep_id, supplier_address, supplier_email, supplier_phone_number) {
+            document.getElementById('edit_supp_id').value = supplier_id;
+            document.getElementById('edit_supp_name').value = supplier_name;
+            document.getElementById('edit_supp_sales_rep_id').value = supp_sales_rep_id;
+            document.getElementById('edit_supp_address').value = supplier_address;
+            document.getElementById('edit_supp_email').value = supplier_email;
+            document.getElementById('edit_supp_phone_number').value = supplier_phone_number;
+
+            document.getElementById('editSupplierForm').style.display = 'flex';
+        }
+
+        function showLocationEditForm(address, location_type, location_name, location_id) {
+            document.getElementById('edit_location_id').value = location_id;
+            document.getElementById('edit_location_name').value = location_name;
+            document.getElementById('edit_location_address').value = address;
+            document.getElementById('edit_location_type').value = location_type;
+
+            document.getElementById('editLocationForm').style.display = 'flex';
+        }
+
+        function showSalesEditForm(sales_rep_id, name, email, phone_number) {
+            document.getElementById('edit_sales_id').value = sales_rep_id;
+            document.getElementById('edit_sales_name').value = name;
+            document.getElementById('edit_sales_email').value = email;
+            document.getElementById('edit_sales_phone_number').value = phone_number;
+
+            document.getElementById('editSalesForm').style.display = 'flex';
+        }
+
+        function closeCustomerEditForm() {
+            document.getElementById('editCustomerForm').style.display = 'none';
+        }
+
+        function closeSupplierEditForm() {
+            document.getElementById('editSupplierForm').style.display = 'none';
+        }
+
+        function closeLocationEditForm() {
+            document.getElementById('editLocationForm').style.display = 'none';
+        }
+        function closeSalesEditForm() {
+            document.getElementById('editSalesForm').style.display = 'none';
+        }
+    </script>
 </body>
 
 </html>
