@@ -1,3 +1,10 @@
+<?php
+$conn = new mysqli("localhost", "root", "", "mystock"); // DB name = smartstock
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -35,7 +42,7 @@
                 <h3>Shipped</h3>
                 <p>10</p>
             </div>
-            
+
         </div>
         <section class="section-table">
             <h2>Recent Purchase Orders</h2>
@@ -47,34 +54,23 @@
                         <th>Order ID</th>
                         <th>Est. Delivery Date</th>
                         <th>Quantity</th>
-                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>PO345</td>
-                        <td>CUST001</td>
-                        <td>ORD345</td>
-                        <td>04-28-2025</td>
-                        <td>250</td>
-                        <td>Pending Fulfillment</td>
-                    </tr>
-                    <tr>
-                        <td>PO789</td>
-                        <td>CUST002</td>
-                        <td>ORD789</td>
-                        <td>04-01-2025</td>
-                        <td>750</td>
-                        <td>Shipped</td>
-                    </tr>
-                    <tr>
-                        <td>PO111</td>
-                        <td>CUST002</td>
-                        <td>ORD111</td>
-                        <td>04-01-2025</td>
-                        <td>400</td>
-                        <td>Received</td>
-                    </tr>
+                    <?php
+                    $sql = "SELECT * FROM PurchaseOrders ORDER BY DeliveryDate DESC LIMIT 5";
+                    $result = $conn->query($sql);
+
+                    while ($row = $result->fetch_assoc()):
+                    ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row["POID"]) ?></td>
+                            <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
+                            <td><?= htmlspecialchars($row["OrderID"]) ?></td>
+                            <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
+                            <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                        </tr>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
         </section>
