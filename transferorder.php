@@ -1,3 +1,9 @@
+<?php
+$conn = new mysqli("localhost", "root", "", "smartstock");
+
+if ($conn->connect_error)
+    die("Connection failed: " . $conn->connect_error);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,11 +18,11 @@
     <header class="topbar">
         <div class="titletext"><strong>SmartStock ERP</strong></div>
         <nav class="topnav">
-            <a href="index.html">Dashboard</a>
+            <a href="index.php">Dashboard</a>
             <a href="inventory.html">Inventory</a>
-            <a href="purchaseorder.html">Purchase Orders</a>
+            <a href="purchaseorder.php">Purchase Orders</a>
             <a href="transferorder.html">Transfer Orders</a>
-            <a href="management.html">Management</a>
+            <a href="management.php">Management</a>
         </nav>
     </header>
 

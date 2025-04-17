@@ -1,9 +1,8 @@
 <?php
-$conn = new mysqli("localhost", "root", "", "mystock"); // DB name = smartstock
+$conn = new mysqli("localhost", "root", "", "smartstock");
 
-if ($conn->connect_error) {
+if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,11 +18,11 @@ if ($conn->connect_error) {
     <header class="topbar">
         <div class="titletext"><strong>SmartStock ERP</strong></div>
         <nav class="topnav">
-            <a href="index.html">Dashboard</a>
-            <a href="inventory.html">Inventory</a>
-            <a href="purchaseorder.html">Purchase Orders</a>
-            <a href="transferorder.html">Transfer Orders</a>
-            <a href="management.html">Management</a>
+            <a href="index.php">Dashboard</a>
+            <a href="inventory.php">Inventory</a>
+            <a href="purchaseorder.php">Purchase Orders</a>
+            <a href="transferorder.php">Transfer Orders</a>
+            <a href="management.php">Management</a>
         </nav>
     </header>
 
@@ -32,17 +31,22 @@ if ($conn->connect_error) {
         <div class="card-container">
             <div class="card">
                 <h3>Total Items</h3>
-                <p>1,234</p>
+                <p>
+                <?php
+                    $result = $conn->query("SELECT COUNT(*) as total FROM items");
+                    $row = $result->fetch_assoc();
+                    echo $row['total'];?>
+                </p>
             </div>
             <div class="card">
-                <h3>Open Orders</h3>
-                <p>28</p>
+                <h3>Purchase Orders</h3>
+                <p>
+                <?php
+                    $result = $conn->query("SELECT COUNT(*) as total FROM purchaseorders");
+                    $row = $result->fetch_assoc();
+                    echo $row['total'];?>
+                </p>
             </div>
-            <div class="card">
-                <h3>Shipped</h3>
-                <p>10</p>
-            </div>
-
         </div>
         <section class="section-table">
             <h2>Recent Purchase Orders</h2>
@@ -52,17 +56,15 @@ if ($conn->connect_error) {
                         <th>PO ID</th>
                         <th>Customer ID</th>
                         <th>Order ID</th>
-                        <th>Est. Delivery Date</th>
+                        <th>Delivery Date</th>
                         <th>Quantity</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    $sql = "SELECT * FROM PurchaseOrders ORDER BY DeliveryDate DESC LIMIT 5";
+                    $sql = "SELECT * FROM PurchaseOrders";
                     $result = $conn->query($sql);
-
-                    while ($row = $result->fetch_assoc()):
-                    ?>
+                    while ($row = $result->fetch_assoc()): ?>
                         <tr>
                             <td><?= htmlspecialchars($row["POID"]) ?></td>
                             <td><?= htmlspecialchars($row["CustomerID"]) ?></td>

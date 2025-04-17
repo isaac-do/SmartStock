@@ -104,6 +104,12 @@ tr:hover {
   gap: 10px;
 }
 
+.searchbox {
+  margin-bottom: 100px;
+  display: flex;
+  gap: 100px;
+}
+
 .toggle-form {
   display: none;
   margin-bottom: 30px;
