@@ -1,3 +1,9 @@
+<?php
+$conn = new mysqli("localhost", "root", "", "smartstock");
+
+if ($conn->connect_error)
+    die("Connection failed: " . $conn->connect_error);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,11 +18,11 @@
     <header class="topbar">
         <div class="titletext"><strong>SmartStock ERP</strong></div>
         <nav class="topnav">
-            <a href="index.html">Dashboard</a>
-            <a href="inventory.html">Inventory</a>
-            <a href="purchaseorder.html">Purchase Orders</a>
-            <a href="transferorder.html">Transfer Orders</a>
-            <a href="management.html">Management</a>
+            <a href="index.php">Dashboard</a>
+            <a href="inventory.php">Inventory</a>
+            <a href="purchaseorder.php">Purchase Orders</a>
+            <a href="transferorder.php">Transfer Orders</a>
+            <a href="management.php">Management</a>
         </nav>
     </header>
 
@@ -25,17 +31,22 @@
         <div class="card-container">
             <div class="card">
                 <h3>Total Items</h3>
-                <p>1,234</p>
+                <p>
+                <?php
+                    $result = $conn->query("SELECT COUNT(*) as total FROM items");
+                    $row = $result->fetch_assoc();
+                    echo $row['total'];?>
+                </p>
             </div>
             <div class="card">
-                <h3>Open Orders</h3>
-                <p>28</p>
+                <h3>Purchase Orders</h3>
+                <p>
+                <?php
+                    $result = $conn->query("SELECT COUNT(*) as total FROM purchaseorders");
+                    $row = $result->fetch_assoc();
+                    echo $row['total'];?>
+                </p>
             </div>
-            <div class="card">
-                <h3>Shipped</h3>
-                <p>10</p>
-            </div>
-            
         </div>
         <section class="section-table">
             <h2>Recent Purchase Orders</h2>
@@ -45,36 +56,23 @@
                         <th>PO ID</th>
                         <th>Customer ID</th>
                         <th>Order ID</th>
-                        <th>Est. Delivery Date</th>
+                        <th>Delivery Date</th>
                         <th>Quantity</th>
-                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>PO345</td>
-                        <td>CUST001</td>
-                        <td>ORD345</td>
-                        <td>04-28-2025</td>
-                        <td>250</td>
-                        <td>Pending Fulfillment</td>
-                    </tr>
-                    <tr>
-                        <td>PO789</td>
-                        <td>CUST002</td>
-                        <td>ORD789</td>
-                        <td>04-01-2025</td>
-                        <td>750</td>
-                        <td>Shipped</td>
-                    </tr>
-                    <tr>
-                        <td>PO111</td>
-                        <td>CUST002</td>
-                        <td>ORD111</td>
-                        <td>04-01-2025</td>
-                        <td>400</td>
-                        <td>Received</td>
-                    </tr>
+                    <?php
+                    $sql = "SELECT * FROM PurchaseOrders";
+                    $result = $conn->query($sql);
+                    while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row["POID"]) ?></td>
+                            <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
+                            <td><?= htmlspecialchars($row["OrderID"]) ?></td>
+                            <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
+                            <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                        </tr>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
         </section>
