@@ -182,7 +182,6 @@ if (isset($_GET['delete'])) {
         function showCreateForm() {
             const form = document.getElementById('createForm');
             form.style.display = form.style.display === 'block' ? 'none' : 'block';
-            document.getElementById('editForm').style.display = 'none';
         }
 
         function showEditForm(po_id, po_customer, order_id, delivery_date, quantity) {

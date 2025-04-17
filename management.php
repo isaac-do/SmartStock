@@ -1,87 +1,6 @@
 <?php
 $conn = new mysqli("localhost", "root", "", "smartstock");
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
-
-/****************************************CUSTOMER RECORD TABLE****************************************/
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_customer'])) {
-    $stmt = $conn->prepare("INSERT INTO customer (CustomerID, CustomerName, CustomerType, SalesRepID, BillingAddress, ShippingAddress, Email, PhoneNumber)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param(
-        "ssssssss",
-        $_POST['customer_id'],
-        $_POST['customer_name'],
-        $_POST['customer_type'],
-        $_POST['sales_rep_id'],
-        $_POST['billing_address'],
-        $_POST['ship_address'],
-        $_POST['email'],
-        $_POST['phone_number']
-    );
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_customer'])) {
-    $stmt = $conn->prepare("UPDATE customer SET CustomerName=?, CustomerType=?, SalesRepID=?, BillingAddress=?, ShippingAddress=?, Email=?, PhoneNumber=? WHERE CustomerID=?");
-    $stmt->bind_param(
-        "ssssssss",
-        $_POST['edit_cust_name'],
-        $_POST['edit_cust_type'],
-        $_POST['edit_sales_rep_id'],
-        $_POST['edit_bill_address'],
-        $_POST['edit_ship_address'],
-        $_POST['edit_cust_email'],
-        $_POST['edit_phone_number'],
-        $_POST['edit_customer_id']
-    );
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-if (isset($_GET['delete_customer'])) {
-    $stmt = $conn->prepare("DELETE FROM customer WHERE CustomerID = ?");
-    $stmt->bind_param("s", $_GET['delete_customer']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-/****************************************CUSTOMER RECORD TABLE****************************************/
-
-/*************************************SALES REPRESENTATIVE TABLE**************************************/
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_sales'])) {
-    $stmt = $conn->prepare("INSERT INTO salesrep (SalesRepID, Name, Email, PhoneNumber) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $_POST['sales_id'], $_POST['name'], $_POST['email'], $_POST['phone_number']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-// UPDATE Sales Rep
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_sales'])) {
-    $stmt = $conn->prepare("UPDATE salesrep SET Name=?, Email=?, PhoneNumber=? WHERE SalesRepID=?");
-    $stmt->bind_param("ssss", $_POST['edit_sales_name'], $_POST['edit_sales_email'], $_POST['edit_sales_phone_number'], $_POST['edit_sales_id']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-// DELETE Sales Rep
-if (isset($_GET['delete_sales'])) {
-    $stmt = $conn->prepare("DELETE FROM salesrep WHERE SalesRepID = ?");
-    $stmt->bind_param("s", $_GET['delete_sales']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-/*************************************SALES REPRESENTATIVE TABLE**************************************/
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -226,15 +145,8 @@ if (isset($_GET['delete_sales'])) {
                             <td><?= htmlspecialchars($row['Email']) ?></td>
                             <td><?= htmlspecialchars($row['PhoneNumber']) ?></td>
                             <td class="actions-row">
-                                <button class="btn"
-                                    onclick="showCustomerEditForm(
-                                    '<?= $row['CustomerID'] ?>', '<?= $row['CompanyName'] ?>', '<?= $row['CustomerType'] ?>',
-                                    '<?= $row['SalesRepID'] ?>', '<?= $row['BillingAddress'] ?>', '<?= $row['ShippingAddress'] ?>',
-                                    '<?= $row['Email'] ?>', '<?= $row['PhoneNumber'] ?>'
-                                    )">Edit</button>
-                                <a class="btn btn-danger"
-                                    onclick="return confirm('Delete this customer?')"
-                                    href="management.php?delete_customer=<?= urlencode($row['CustomerID']) ?>">Delete</a>
+                                <button class="btn">Edit</button>
+                                <a class="btn btn-danger">Delete</a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -522,15 +434,8 @@ if (isset($_GET['delete_sales'])) {
                         <td><?= htmlspecialchars($row['Email']) ?></td>
                         <td><?= htmlspecialchars($row['PhoneNumber']) ?></td>
                         <td class="actions-row">
-                            <button class="btn"
-                                onclick="showSalesEditForm(
-                                '<?= $row['SalesRepID'] ?>',
-                                '<?= $row['Name'] ?>',
-                                '<?= $row['Email'] ?>',
-                                '<?= $row['PhoneNumber'] ?>')">Edit</button>
-                            <a class="btn btn-danger"
-                                onclick="return confirm('Delete this sales representative?')"
-                                href="management.php?delete_sales=<?= urlencode($row['SalesRepID']) ?>">Delete</a>
+                            <button class="btn">Edit</button>
+                            <a class="btn btn-danger">Delete</a>
                         </td>
                     </tr>
                 <?php endwhile; ?>
