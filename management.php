@@ -1,87 +1,6 @@
 <?php
 $conn = new mysqli("localhost", "root", "", "smartstock");
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
-
-/****************************************CUSTOMER RECORD TABLE****************************************/
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_customer'])) {
-    $stmt = $conn->prepare("INSERT INTO customer (CustomerID, CustomerName, CustomerType, SalesRepID, BillingAddress, ShippingAddress, Email, PhoneNumber)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param(
-        "ssssssss",
-        $_POST['customer_id'],
-        $_POST['customer_name'],
-        $_POST['customer_type'],
-        $_POST['sales_rep_id'],
-        $_POST['billing_address'],
-        $_POST['ship_address'],
-        $_POST['email'],
-        $_POST['phone_number']
-    );
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_customer'])) {
-    $stmt = $conn->prepare("UPDATE customer SET CustomerName=?, CustomerType=?, SalesRepID=?, BillingAddress=?, ShippingAddress=?, Email=?, PhoneNumber=? WHERE CustomerID=?");
-    $stmt->bind_param(
-        "ssssssss",
-        $_POST['edit_cust_name'],
-        $_POST['edit_cust_type'],
-        $_POST['edit_sales_rep_id'],
-        $_POST['edit_bill_address'],
-        $_POST['edit_ship_address'],
-        $_POST['edit_cust_email'],
-        $_POST['edit_phone_number'],
-        $_POST['edit_customer_id']
-    );
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-if (isset($_GET['delete_customer'])) {
-    $stmt = $conn->prepare("DELETE FROM customer WHERE CustomerID = ?");
-    $stmt->bind_param("s", $_GET['delete_customer']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-/****************************************CUSTOMER RECORD TABLE****************************************/
-
-/*************************************SALES REPRESENTATIVE TABLE**************************************/
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_sales'])) {
-    $stmt = $conn->prepare("INSERT INTO salesrep (SalesRepID, Name, Email, PhoneNumber) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $_POST['sales_id'], $_POST['name'], $_POST['email'], $_POST['phone_number']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-// UPDATE Sales Rep
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_sales'])) {
-    $stmt = $conn->prepare("UPDATE salesrep SET Name=?, Email=?, PhoneNumber=? WHERE SalesRepID=?");
-    $stmt->bind_param("ssss", $_POST['edit_sales_name'], $_POST['edit_sales_email'], $_POST['edit_sales_phone_number'], $_POST['edit_sales_id']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-
-// DELETE Sales Rep
-if (isset($_GET['delete_sales'])) {
-    $stmt = $conn->prepare("DELETE FROM salesrep WHERE SalesRepID = ?");
-    $stmt->bind_param("s", $_GET['delete_sales']);
-    $stmt->execute();
-    $stmt->close();
-    header("Location: management.php");
-    exit;
-}
-/*************************************SALES REPRESENTATIVE TABLE**************************************/
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -109,84 +28,78 @@ if (isset($_GET['delete_sales'])) {
         <h1>Customer Management</h2>
             <div class="actions">
                 <button class="btn" onclick="showCustomerCreateForm()">Create Customer Record</button>
-                <form method="GET">
-                    <input type="text" id="searchInput" name="customer_search" placeholder="Search Customer ID" value="<?= isset($_GET['customer_search']) ? htmlspecialchars($_GET['customer_search']) : '' ?>" />
-                    <button class="btn" onclick="">Search</button>
-                </form>
+                <input type="text" id="searchInput" placeholder="Search Customer ID" />
+                <button class="btn" onclick="">Search</button>
             </div>
 
             <!-- This is the customer record create form-->
             <div id="createCustomerForm" class="toggle-form">
-                <form method="POST">
-                    <h2>Create New Customer Record</h2>
-                    <label for="customer_id">Customer ID</label>
-                    <input type="text" id="customer_id" name="customer_id" />
+                <h2>Create New Customer Record</h2>
+                <label for="customer_id">Customer ID</label>
+                <input type="text" id="customer_id" name="customer_id" />
 
-                    <label for="customer_name">Customer Name</label>
-                    <input type="text" id="customer_name" name="customer_name" />
+                <label for="customer_name">Customer Name</label>
+                <input type="text" id="customer_name" name="customer_name" />
 
-                    <label for="customer_type">Customer Type</label>
-                    <input type="text" id="customer_type" name="customer_type" />
+                <label for="customer_type">Customer Type</label>
+                <input type="text" id="customer_type" name="customer_type" />
 
-                    <label for="sales_rep_id">Sales Rep ID</label>
-                    <input type="text" id="sales_rep_id" name="sales_rep_id" />
+                <label for="sales_rep_id">Sales Rep ID</label>
+                <input type="text" id="sales_rep_id" name="sales_rep_id" />
 
-                    <label for="billing_address">Billing Address</label>
-                    <input type="text" id="billing_address" name="billing_address" />
+                <label for="billing_address">Billing Address</label>
+                <input type="text" id="billing_address" name="billing_address" />
 
-                    <label for="ship_address">Shipping Address</label>
-                    <input type="text" id="ship_address" name="ship_address" />
+                <label for="ship_address">Shipping Address</label>
+                <input type="text" id="ship_address" name="ship_address" />
 
-                    <label for="email">Email</label>
-                    <input type="text" id="email" name="email" />
+                <label for="email">Email</label>
+                <input type="text" id="email" name="email" />
 
-                    <label for="phone_number">Phone Number</label>
-                    <input type="text" id="phone_number" name="phone_number" />
+                <label for="phone_number">Phone Number</label>
+                <input type="text" id="phone_number" name="phone_number" />
 
-                    <button class="btn" type="submit" name="create_customer" onclick="alert('Customer Record Created.')">Create</button>
-                </form>
+                <button class="btn" onclick="alert('Customer Record Created.')">Create</button>
             </div>
             <!-- This is the customer record edit form-->
             <div id="editCustomerForm" class="modal-overlay">
-                <form method="POST">
-                    <div class="modal-content">
-                        <h2>Edit Customer Record</h2>
-                        <div class="form-group">
-                            <label>Customer ID</label>
-                            <input type="text" id="edit_customer_id" name="edit_customer_id" disabled />
-                        </div>
-                        <div class="form-group">
-                            <label>Company Name</label>
-                            <input type="text" id="edit_cust_name" name="edit_cust_name" />
-                        </div>
-                        <div class="form-group">
-                            <label>Customer Type</label>
-                            <input type="text" id="edit_cust_type" name="edit_cust_type" />
-                        </div>
-                        <div class="form-group">
-                            <label>Sales Rep ID</label>
-                            <input type="text" id="edit_sales_rep_id" name="edit_sales_rep_id" />
-                        </div>
-                        <div class="form-group">
-                            <label>Billing Address</label>
-                            <input type="text" id="edit_bill_address" name="edit_bill_address" />
-                        </div>
-                        <div class="form-group">
-                            <label>Shipping Address</label>
-                            <input type="text" id="edit_ship_address" name="edit_ship_address" />
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="text" id="edit_cust_email" name="edit_cust_email" />
-                        </div>
-                        <div class="form-group">
-                            <label>Phone Number</label>
-                            <input type="text" id="edit_phone_number" name="edit_phone_number" />
-                        </div>
-                        <button class="btn" type="submit" name="update_customer" onclick="alert('Changes saved.')">Save Changes</button>
-                        <button class="btn btn-secondary" onclick="closeCustomerEditForm()">Cancel</button>
+                <div class="modal-content">
+                    <h2>Edit Customer Record</h2>
+                    <div class="form-group">
+                        <label>Customer ID</label>
+                        <input type="text" id="edit_customer_id" name="edit_customer_id" disabled />
                     </div>
-                </form>
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="edit_cust_name" name="edit_cust_name" />
+                    </div>
+                    <div class="form-group">
+                        <label>Customer Type</label>
+                        <input type="text" id="edit_cust_type" name="edit_cust_type" />
+                    </div>
+                    <div class="form-group">
+                        <label>Sales Rep ID</label>
+                        <input type="text" id="edit_sales_rep_id" name="edit_sales_rep_id" />
+                    </div>
+                    <div class="form-group">
+                        <label>Billing Address</label>
+                        <input type="text" id="edit_bill_address" name="edit_bill_address" />
+                    </div>
+                    <div class="form-group">
+                        <label>Shipping Address</label>
+                        <input type="text" id="edit_ship_address" name="edit_ship_address" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="text" id="edit_cust_email" name="edit_cust_email" />
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="edit_phone_number" name="edit_phone_number" />
+                    </div>
+                    <button class="btn" onclick="alert('Changes saved.')">Save Changes</button>
+                    <button class="btn btn-secondary" onclick="closeCustomerEditForm()">Cancel</button>
+                </div>
             </div>
             <table>
                 <thead>
@@ -226,15 +139,8 @@ if (isset($_GET['delete_sales'])) {
                             <td><?= htmlspecialchars($row['Email']) ?></td>
                             <td><?= htmlspecialchars($row['PhoneNumber']) ?></td>
                             <td class="actions-row">
-                                <button class="btn"
-                                    onclick="showCustomerEditForm(
-                                    '<?= $row['CustomerID'] ?>', '<?= $row['CompanyName'] ?>', '<?= $row['CustomerType'] ?>',
-                                    '<?= $row['SalesRepID'] ?>', '<?= $row['BillingAddress'] ?>', '<?= $row['ShippingAddress'] ?>',
-                                    '<?= $row['Email'] ?>', '<?= $row['PhoneNumber'] ?>'
-                                    )">Edit</button>
-                                <a class="btn btn-danger"
-                                    onclick="return confirm('Delete this customer?')"
-                                    href="management.php?delete_customer=<?= urlencode($row['CustomerID']) ?>">Delete</a>
+                                <button class="btn">Edit</button>
+                                <button class="btn btn-danger">Delete</button>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -442,55 +348,49 @@ if (isset($_GET['delete_sales'])) {
         <h1>Sales Representative</h1>
         <div class="actions">
             <button class="btn" onclick="showSalesCreateForm()">Create Sales Rep Record</button>
-            <form method="GET">
-                <input type="text" id="searchInput" name="sales_rep_search" placeholder="Search Sales ID" value="<?= isset($_GET['sales_rep_search']) ? htmlspecialchars($_GET['sales_rep_search']) : '' ?>" />
-                <button class="btn" onclick="">Search</button>
-            </form>
+            <input type="text" id="searchInput" placeholder="Search Sales ID"  />
+            <button class="btn" onclick="">Search</button>
         </div>
 
         <!-- This is the sales record create form-->
         <div id="createSalesForm" class="toggle-form">
-            <form method="POST">
-                <h2>Create New Sales Record</h2>
-                <label for="sales_id">Sales Rep ID</label>
-                <input type="text" id="sales_id" name="sales_id" />
+            <h2>Create New Sales Record</h2>
+            <label for="sales_id">Sales Rep ID</label>
+            <input type="text" id="sales_id" name="sales_id" />
 
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" />
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" />
 
-                <label for="email">Email</label>
-                <input type="text" id="email" name="email" />
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email" />
 
-                <label for="phone_number">Phone Number</label>
-                <input type="text" id="phone_number" name="phone_number" />
-                <button class="btn" onclick="alert('Sales Rep Record Created.')">Create</button>
-            </form>
+            <label for="phone_number">Phone Number</label>
+            <input type="text" id="phone_number" name="phone_number" />
+            <button class="btn" onclick="alert('Sales Rep Record Created.')">Create</button>
         </div>
         <!-- This is the sales record edit form-->
         <div id="editSalesForm" class="modal-overlay">
-            <form method="POST">
-                <div class="modal-content">
-                    <h2>Edit Sales Record</h2>
-                    <div class="form-group">
-                        <label>Sales ID</label>
-                        <input type="text" id="edit_sales_id" name="edit_sales_id" disabled />
-                    </div>
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="edit_sales_name" name="edit_sales_name" />
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="text" id="edit_sales_email" name="edit_sales_email" />
-                    </div>
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="text" id="edit_sales_phone_number" name="edit_sales_phone_number" />
-                    </div>
-                    <button class="btn" onclick="alert('Changes saved.')">Save Changes</button>
-                    <button class="btn btn-secondary" onclick="closeSalesEditForm()">Cancel</button>
+            <div class="modal-content">
+                <h2>Edit Sales Record</h2>
+                <div class="form-group">
+                    <label>Sales ID</label>
+                    <input type="text" id="edit_sales_id" name="edit_sales_id" disabled />
                 </div>
-            </form>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="edit_sales_name" name="edit_sales_name" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" id="edit_sales_email" name="edit_sales_email" />
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="edit_sales_phone_number" name="edit_sales_phone_number" />
+                </div>
+                <button class="btn" onclick="alert('Changes saved.')">Save Changes</button>
+                <button class="btn btn-secondary" onclick="closeSalesEditForm()">Cancel</button>
+            </div>
         </div>
         <table>
             <thead>
@@ -522,15 +422,8 @@ if (isset($_GET['delete_sales'])) {
                         <td><?= htmlspecialchars($row['Email']) ?></td>
                         <td><?= htmlspecialchars($row['PhoneNumber']) ?></td>
                         <td class="actions-row">
-                            <button class="btn"
-                                onclick="showSalesEditForm(
-                                '<?= $row['SalesRepID'] ?>',
-                                '<?= $row['Name'] ?>',
-                                '<?= $row['Email'] ?>',
-                                '<?= $row['PhoneNumber'] ?>')">Edit</button>
-                            <a class="btn btn-danger"
-                                onclick="return confirm('Delete this sales representative?')"
-                                href="management.php?delete_sales=<?= urlencode($row['SalesRepID']) ?>">Delete</a>
+                            <button class="btn">Edit</button>
+                            <button class="btn btn-danger">Delete</button>
                         </td>
                     </tr>
                 <?php endwhile; ?>
