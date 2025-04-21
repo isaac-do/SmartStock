@@ -302,7 +302,7 @@ if (isset($_GET['delete'])) {
                             <button class="btn"
                                 onclick="showEditForm(
                                 '<?= htmlspecialchars($row['SupplierID']) ?>',
-                                '<?= htmlspecialchars($row['SupplierName']) ?>',
+                                '<?= htmlspecialchars($row['Name']) ?>',
                                 '<?= htmlspecialchars($row['SalesRepID']) ?>',
                                 '<?= htmlspecialchars($row['Address']) ?>',
                                 '<?= htmlspecialchars($row['Email']) ?>',
