@@ -199,64 +199,70 @@ if (isset($_GET['delete'])) {
         <h1>Supplier Records</h1>
         <div class="actions">
             <button class="btn" onclick="showSupplierCreateForm()">Create Supplier Record</button>
-            <input type="text" id="searchInput" placeholder="Search Supplier ID" />
-            <button class="btn" onclick="">Search</button>
+            <form method="GET">
+                <input type="text" id="searchInput" placeholder="Search Supplier ID" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" />
+                <button class="btn" type="Submit">Search</button>
+            </form>
         </div>
 
         <!-- This is the supplier record create form-->
         <div id="createSupplierForm" class="toggle-form">
-            <h2>Create New Supplier Record</h2>
-            <label for="supplier_id">Supplier ID</label>
-            <input type="text" id="supplier_id" name="supplier_id" />
+            <form method="POST">
+                <h2>Create New Supplier Record</h2>
+                <label for="supplier_id">Supplier ID</label>
+                <input type="text" id="supplier_id" name="supplier_id" required />
 
-            <label for="supplier_name">Supplier Name</label>
-            <input type="text" id="supplier_name" name="supplier_name" />
+                <label for="supplier_name">Supplier Name</label>
+                <input type="text" id="supplier_name" name="supplier_name" required/>
 
-            <label for="supp_sales_rep_id">Sales Rep ID</label>
-            <input type="text" id="supp_sales_rep_id" name="supp_sales_rep_id" />
+                <label for="supp_sales_rep_id">Sales Rep ID</label>
+                <input type="text" id="supp_sales_rep_id" name="supp_sales_rep_id" required/>
 
-            <label for="supplier_address">Address</label>
-            <input type="text" id="supplier_address" name="supplier_address" />
+                <label for="supplier_address">Address</label>
+                <input type="text" id="supplier_address" name="supplier_address" required/>
 
-            <label for="supplier_email">Email</label>
-            <input type="text" id="supplier_email" name="supplier_email" />
+                <label for="supplier_email">Email</label>
+                <input type="text" id="supplier_email" name="supplier_email" required/>
 
-            <label for="supplier_phone_number">Phone Number</label>
-            <input type="text" id="supplier_phone_number" name="supplier_phone_number" />
+                <label for="supplier_phone_number">Phone Number</label>
+                <input type="text" id="supplier_phone_number" name="supplier_phone_number" required/>
 
-            <button class="btn" onclick="alert('Supplier Record Created.')">Create</button>
+                <button class="btn" type="submit" name="create_supplier" onclick="alert('Supplier Record Created.')">Create</button>
+            </form>
         </div>
         <!-- This is the supplier record edit form-->
         <div id="editSupplierForm" class="modal-overlay">
-            <div class="modal-content">
-                <h2>Edit Supplier Record</h2>
-                <div class="form-group">
-                    <label>Supplier ID</label>
-                    <input type="text" id="edit_supp_id" name="edit_supp_id" disabled />
+            <form method="POST">
+                <div class="modal-content">
+                    <h2>Edit Supplier Record Form</h2>
+                    <div class="form-group">
+                        <label>Supplier ID</label>
+                        <input type="text" id="edit_supp_id" name="edit_supp_id" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier Name</label>
+                        <input type="text" id="edit_supp_name" name="edit_supp_name" />
+                    </div>
+                    <div class="form-group">
+                        <label>Sales Rep ID</label>
+                        <input type="text" id="edit_supp_sales_rep_id" name="edit_supp_sales_rep_id" />
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="edit_supp_address" name="edit_supp_address" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="text" id="edit_supp_email" name="edit_supp_email" />
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="edit_supp_phone_number" name="edit_supp_phone_number" />
+                    </div>
+                    <button class="btn" type="submit" name="update_supplier" onclick="alert('Changes saved.')">Save Changes</button>
+                    <button class="btn btn-secondary" onclick="closeSupplierEditForm()">Cancel</button>
                 </div>
-                <div class="form-group">
-                    <label>Supplier Name</label>
-                    <input type="text" id="edit_supp_name" name="edit_supp_name" />
-                </div>
-                <div class="form-group">
-                    <label>Sales Rep ID</label>
-                    <input type="text" id="edit_supp_sales_rep_id" name="edit_supp_sales_rep_id" />
-                </div>
-                <div class="form-group">
-                    <label>Address</label>
-                    <input type="text" id="edit_supp_address" name="edit_supp_address" />
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="text" id="edit_supp_email" name="edit_supp_email" />
-                </div>
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="text" id="edit_supp_phone_number" name="edit_supp_phone_number" />
-                </div>
-                <button class="btn" onclick="alert('Changes saved.')">Save Changes</button>
-                <button class="btn btn-secondary" onclick="closeSupplierEditForm()">Cancel</button>
-            </div>
+            </form>
         </div>
         <table>
             <thead>
@@ -270,46 +276,43 @@ if (isset($_GET['delete'])) {
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>SUP001</td>
-                    <td>Acme Supplies</td>
-                    <td>SR100</td>
-                    <td>123 Main St, Chicago, IL</td>
-                    <td>acme@supplies.com</td>
-                    <td>(312) 555-0198</td>
-                    <td class="actions-row">
-                        <button class="btn"
-                            onclick="showSupplierEditForm('SUP001', 'Acme Supplies', 'SR100', '123 Main St, Chicago, IL', 'acme@supplies.com', '(312) 555-0198')">Edit</button>
-                        <button class="btn">Delete</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>SUP002</td>
-                    <td>Bright Paper Co.</td>
-                    <td>SR102</td>
-                    <td>456 Elm Rd, Dallas, TX</td>
-                    <td>info@brightpaper.com</td>
-                    <td>(214) 555-0113</td>
-                    <td class="actions-row">
-                        <button class="btn"
-                            onclick="showSupplierEditForm('SUP002', 'Bright Paper Co.', 'SR102', '456 Elm Rd, Dallas, TX', 'info@brightpaper.com', '(214) 555-0113')">Edit</button>
-                        <button class="btn">Delete</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>SUP003</td>
-                    <td>Global Office</td>
-                    <td>SR103</td>
-                    <td>789 Maple Ln, San Jose, CA</td>
-                    <td>globaloffice@supplies.com</td>
-                    <td>(123) 456-7890</td>
-                    <td class="actions-row">
-                        <button class="btn"
-                            onclick="showSupplierEditForm('SUP001', 'Acme Supplies', 'SR100', '123 Main St, Chicago, IL', 'globaloffice@supplies.com', '(123) 456-7890')">Edit</button>
-                        <button class="btn">Delete</button>
-                    </td>
-                </tr>
+            <!-- Temporary data. Will need to implement PHP to pull from database. -->
+            <tbody id ="toTable">
+                <?php 
+                $search = isset($_GET['search']) ? $_GET['search'] : '';
+                if (!empty($search)) {
+                    $stmt = $conn->prepare("SELECT * FROM SupplierRecords WHERE SupplierID LIKE ?");
+                    $likeSearch = "%$search%";
+                    $stmt->bind_param("s", $likeSearch);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                } 
+                else
+                    $result = $conn->query("SELECT * FROM SupplierRecords");
+
+                while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row["SupplierID"]) ?></td>
+                        <td><?= htmlspecialchars($row["SupplierName"]) ?></td>
+                        <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
+                        <td><?= htmlspecialchars($row["Address"]) ?></td>
+                        <td><?= htmlspecialchars($row["Email"]) ?></td>
+                        <td><?= htmlspecialchars($row["PhoneNumber"]) ?></td>
+                        <td class="actions-row">
+                            <button class="btn"
+                                onclick="showEditForm(
+                                '<?= htmlspecialchars($row['SupplierID']) ?>',
+                                '<?= htmlspecialchars($row['SupplierName']) ?>',
+                                '<?= htmlspecialchars($row['SalesRepID']) ?>',
+                                '<?= htmlspecialchars($row['Address']) ?>',
+                                '<?= htmlspecialchars($row['Email']) ?>',
+                                '<?= htmlspecialchars($row['PhoneNumber']) ?>'
+                                )">Edit</button>
+                            <a class="btn btn-danger" href="management.php?delete=<?= urlencode($row['SupplierID']) ?>"
+                                onclick="return confirm('Are you sure you want to delete this Supplier?')">Delete</a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
             </tbody>
         </table>
     </div>
@@ -505,7 +508,6 @@ if (isset($_GET['delete'])) {
         function showSupplierCreateForm() {
             const form = document.getElementById('createSupplierForm');
             form.style.display = form.style.display === 'block' ? 'none' : 'block';
-            document.getElementById('editForm').style.display = 'none';
         }
 
         function showLocationCreateForm() {
