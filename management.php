@@ -3,6 +3,56 @@ $conn = new mysqli("localhost", "root", "", "smartstock");
 if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
 
+// CREATE Supplier
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_supplier'])) {
+    $supplier_id = $_POST['supplier_id'];
+    $supplier_name = $_POST['supplier_name'];
+    $sales_rep_id = $_POST['supp_sales_rep_id'];
+    $address = $_POST['supplier_address'];
+    $email = $_POST['supplier_email'];
+    $phone_number = $_POST['supplier_phone_number'];
+
+    $stmt = $conn->prepare("INSERT INTO SupplierRecords (SupplierID, Name, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $supplier_id, $supplier_name, $sales_rep_id, $address, $email, $phone_number);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+// UPDATE Supplier
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_supplier'])) {
+    $supplier_id = $_POST['edit_supp_id'];
+    $supplier_name = $_POST['edit_supp_name'];
+    $sales_rep_id = $_POST['edit_supp_sales_rep_id'];
+    $address = $_POST['edit_supp_address'];
+    $email = $_POST['edit_supp_email'];
+    $phone_number = $_POST['edit_supp_phone_number'];
+
+    $stmt = $conn->prepare("UPDATE SupplierRecords SET Name=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
+    $stmt->bind_param("ssssss", $supplier_name, $sales_rep_id, $address, $email, $phone_number, $supplier_id);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+// DELETE Supplier
+if (isset($_GET['delete'])) {
+    $delete_id = $_GET['delete'];
+
+    // Check if it's a SupplierID or a SalesRepID (optional logic split)
+    $stmt = $conn->prepare("DELETE FROM SupplierRecords WHERE SupplierID = ?");
+    $stmt->bind_param("s", $delete_id);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_sr'])) {
     $sales_id = $_POST['sales_id'];
     $name = $_POST['name'];
