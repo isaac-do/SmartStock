@@ -331,14 +331,14 @@ if (isset($_GET['delete'])) {
                 <?php 
                 $search = isset($_GET['search']) ? $_GET['search'] : '';
                 if (!empty($search)) {
-                    $stmt = $conn->prepare("SELECT * FROM SupplierRecords WHERE SupplierID LIKE ?");
+                    $stmt = $conn->prepare("SELECT * FROM supplier WHERE SupplierID LIKE ?");
                     $likeSearch = "%$search%";
                     $stmt->bind_param("s", $likeSearch);
                     $stmt->execute();
                     $result = $stmt->get_result();
                 } 
                 else
-                    $result = $conn->query("SELECT * FROM SupplierRecords");
+                    $result = $conn->query("SELECT * FROM supplier");
 
                 while ($row = $result->fetch_assoc()): ?>
                     <tr>
