@@ -293,7 +293,7 @@ if (isset($_GET['delete'])) {
                 while ($row = $result->fetch_assoc()): ?>
                     <tr>
                         <td><?= htmlspecialchars($row["SupplierID"]) ?></td>
-                        <td><?= htmlspecialchars($row["SupplierName"]) ?></td>
+                        <td><?= htmlspecialchars($row["Name"]) ?></td>
                         <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
                         <td><?= htmlspecialchars($row["Address"]) ?></td>
                         <td><?= htmlspecialchars($row["Email"]) ?></td>
