@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_supplier'])) {
     $email = $_POST['supplier_email'];
     $phone_number = $_POST['supplier_phone_number'];
 
-    $stmt = $conn->prepare("INSERT INTO SupplierRecords (SupplierID, Name, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO supplier (SupplierID, SupplierName, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssss", $supplier_id, $supplier_name, $sales_rep_id, $address, $email, $phone_number);
     $stmt->execute();
     $stmt->close();
@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_supplier'])) {
     $email = $_POST['edit_supp_email'];
     $phone_number = $_POST['edit_supp_phone_number'];
 
-    $stmt = $conn->prepare("UPDATE SupplierRecords SET Name=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
+    $stmt = $conn->prepare("UPDATE supplier SET SupplierName=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
     $stmt->bind_param("ssssss", $supplier_name, $sales_rep_id, $address, $email, $phone_number, $supplier_id);
     $stmt->execute();
     $stmt->close();
@@ -44,7 +44,7 @@ if (isset($_GET['delete'])) {
     $delete_id = $_GET['delete'];
 
     // Check if it's a SupplierID or a SalesRepID (optional logic split)
-    $stmt = $conn->prepare("DELETE FROM SupplierRecords WHERE SupplierID = ?");
+    $stmt = $conn->prepare("DELETE FROM supplier WHERE SupplierID = ?");
     $stmt->bind_param("s", $delete_id);
     $stmt->execute();
     $stmt->close();
@@ -343,7 +343,7 @@ if (isset($_GET['delete'])) {
                 while ($row = $result->fetch_assoc()): ?>
                     <tr>
                         <td><?= htmlspecialchars($row["SupplierID"]) ?></td>
-                        <td><?= htmlspecialchars($row["Name"]) ?></td>
+                        <td><?= htmlspecialchars($row["SupplierName"]) ?></td>
                         <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
                         <td><?= htmlspecialchars($row["Address"]) ?></td>
                         <td><?= htmlspecialchars($row["Email"]) ?></td>
@@ -352,7 +352,7 @@ if (isset($_GET['delete'])) {
                             <button class="btn"
                                 onclick="showSupplierEditForm(
                                 '<?= htmlspecialchars($row['SupplierID']) ?>',
-                                '<?= htmlspecialchars($row['Name']) ?>',
+                                '<?= htmlspecialchars($row['SupplierName']) ?>',
                                 '<?= htmlspecialchars($row['SalesRepID']) ?>',
                                 '<?= htmlspecialchars($row['Address']) ?>',
                                 '<?= htmlspecialchars($row['Email']) ?>',
