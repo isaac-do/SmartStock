@@ -3,7 +3,105 @@ $conn = new mysqli("localhost", "root", "", "smartstock");
 if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
 
-// CREATE Supplier
+    // CREATE CUSTOMER 
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_customer'])) {
+    $customer_id = $_POST['customer_id'];
+    $customer_name = $_POST['customer_name'];
+    $customer_type = $_POST['customer_type'];
+    $sales_rep_id = $_POST['sales_rep_id'];
+    $billing_address = $_POST['billing_address'];
+    $shipping_address = $_POST['shipping_address'];
+    $email = $_POST['email'];
+    $phone_number = $_POST['phone_number'];
+
+    $stmt = $conn->prepare("INSERT INTO Customer (CustomerID, CompanyName, CustomerType, SalesRepID, BillingAddress, ShippingAddress, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssss", $customer_id, $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+// UPDATE CUSTOMER 
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_customer'])) {
+    $customer_id = $_POST['edit_customer_id'];
+    $customer_name = $_POST['edit_cust_name'];
+    $customer_type = $_POST['edit_cust_type'];
+    $sales_rep_id = $_POST['edit_sales_rep_id'];
+    $billing_address = $_POST['edit_bill_address'];
+    $shipping_address = $_POST['edit_ship_address'];
+    $email = $_POST['edit_cust_email'];
+    $phone_number = $_POST['edit_phone_number'];
+
+    $stmt = $conn->prepare("UPDATE Customer SET CompanyName=?, CustomerType=?, SalesRepID=?, BillingAddress=?, ShippingAddress=?, Email=?, PhoneNumber=? WHERE CustomerID=?");
+    $stmt->bind_param("ssssssss", $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number, $customer_id);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+// DELETE CUSTOMER 
+if (isset($_GET['delete_customer'])) {
+    $customer_id = $_GET['delete_customer'];
+
+    $stmt = $conn->prepare("DELETE FROM Customer WHERE CustomerID = ?");
+    $stmt->bind_param("s", $customer_id);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+// CREATE LOCATION 
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_location'])) {
+    $location_id = $_POST['location_id'];
+    $location_name = $_POST['location_name'];
+    $location_type = $_POST['location_type'];
+    $address = $_POST['address'];
+
+    $stmt = $conn->prepare("INSERT INTO Locations (LocationID, LocationName, LocationType, Address) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssi", $location_id, $location_name, $location_type, $address);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+// UPDATE LOCATION 
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_location'])) {
+    $location_id = $_POST['edit_location_id'];
+    $location_name = $_POST['edit_location_name'];
+    $location_type = $_POST['edit_location_type'];
+    $address = $_POST['edit_address'];
+
+    $stmt = $conn->prepare("UPDATE Locations SET LocationName=?, LocationType=?, Address=? WHERE LocationID=?");
+    $stmt->bind_param("ssis", $location_name, $location_type, $address, $location_id);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+// DELETE LOCATION 
+if (isset($_GET['delete'])) {
+    $location_id = $_GET['delete'];
+
+    $stmt = $conn->prepare("DELETE FROM Locations WHERE LocationID = ?");
+    $stmt->bind_param("s", $location_id);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: management.php");
+    exit;
+}
+
+    // CREATE Supplier
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_supplier'])) {
     $supplier_id = $_POST['supplier_id'];
     $supplier_name = $_POST['supplier_name'];
@@ -12,7 +110,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_supplier'])) {
     $email = $_POST['supplier_email'];
     $phone_number = $_POST['supplier_phone_number'];
 
-    $stmt = $conn->prepare("INSERT INTO supplier (SupplierID, SupplierName, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO SupplierRecords (SupplierID, Name, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssss", $supplier_id, $supplier_name, $sales_rep_id, $address, $email, $phone_number);
     $stmt->execute();
     $stmt->close();
@@ -30,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_supplier'])) {
     $email = $_POST['edit_supp_email'];
     $phone_number = $_POST['edit_supp_phone_number'];
 
-    $stmt = $conn->prepare("UPDATE supplier SET SupplierName=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
+    $stmt = $conn->prepare("UPDATE SupplierRecords SET Name=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
     $stmt->bind_param("ssssss", $supplier_name, $sales_rep_id, $address, $email, $phone_number, $supplier_id);
     $stmt->execute();
     $stmt->close();
@@ -44,7 +142,7 @@ if (isset($_GET['delete'])) {
     $delete_id = $_GET['delete'];
 
     // Check if it's a SupplierID or a SalesRepID (optional logic split)
-    $stmt = $conn->prepare("DELETE FROM supplier WHERE SupplierID = ?");
+    $stmt = $conn->prepare("DELETE FROM SupplierRecords WHERE SupplierID = ?");
     $stmt->bind_param("s", $delete_id);
     $stmt->execute();
     $stmt->close();
@@ -343,7 +441,7 @@ if (isset($_GET['delete'])) {
                 while ($row = $result->fetch_assoc()): ?>
                     <tr>
                         <td><?= htmlspecialchars($row["SupplierID"]) ?></td>
-                        <td><?= htmlspecialchars($row["SupplierName"]) ?></td>
+                        <td><?= htmlspecialchars($row["Name"]) ?></td>
                         <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
                         <td><?= htmlspecialchars($row["Address"]) ?></td>
                         <td><?= htmlspecialchars($row["Email"]) ?></td>
@@ -352,7 +450,7 @@ if (isset($_GET['delete'])) {
                             <button class="btn"
                                 onclick="showSupplierEditForm(
                                 '<?= htmlspecialchars($row['SupplierID']) ?>',
-                                '<?= htmlspecialchars($row['SupplierName']) ?>',
+                                '<?= htmlspecialchars($row['Name']) ?>',
                                 '<?= htmlspecialchars($row['SalesRepID']) ?>',
                                 '<?= htmlspecialchars($row['Address']) ?>',
                                 '<?= htmlspecialchars($row['Email']) ?>',
