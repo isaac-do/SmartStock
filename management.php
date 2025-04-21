@@ -350,7 +350,7 @@ if (isset($_GET['delete'])) {
                         <td><?= htmlspecialchars($row["PhoneNumber"]) ?></td>
                         <td class="actions-row">
                             <button class="btn"
-                                onclick="showEditForm(
+                                onclick="showSupplierEditForm(
                                 '<?= htmlspecialchars($row['SupplierID']) ?>',
                                 '<?= htmlspecialchars($row['Name']) ?>',
                                 '<?= htmlspecialchars($row['SalesRepID']) ?>',
