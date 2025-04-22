@@ -524,18 +524,38 @@ if (isset($_GET['delete'])) {
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>SUP001</td>
-                        <td>Acme Supplies</td>
-                        <td>SR100</td>
-                        <td>123 Main St, Chicago, IL</td>
-                        <td class="actions-row">
-                            <button class="btn"
-                                onclick="showLocationEditForm('SUP001', 'Acme Supplies', 'SR100', '123 Main St, Chicago, IL')">Edit</button>
-                            <button class="btn">Delete</button>
-                        </td>
-                    </tr>
+                <tbody id="locationTable">
+                    <?php
+                    $location_search = isset($_GET['location_search']) ? $_GET['location_search'] : '';
+                    if (!empty($location_search)) {
+                        $stmt = $conn->prepare("SELECT * FROM location WHERE LocationID LIKE ?");
+                        $likeSearch = "%$location_search%";
+                        $stmt->bind_param("s", $likeSearch);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                    } else {
+                        $result = $conn->query("SELECT * FROM location");
+                    }
+                
+                    while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row["Address"]) ?></td>
+                            <td><?= htmlspecialchars($row["LocationType"]) ?></td>
+                            <td><?= htmlspecialchars($row["LocationName"]) ?></td>
+                            <td><?= htmlspecialchars($row["LocationID"]) ?></td>
+                            <td class="actions-row">
+                                <button class="btn"
+                                    onclick="showLocationEditForm(
+                                        '<?= htmlspecialchars($row['Address']) ?>',
+                                        '<?= htmlspecialchars($row['LocationType']) ?>',
+                                        '<?= htmlspecialchars($row['LocationName']) ?>',
+                                        '<?= htmlspecialchars($row['LocationID']) ?>'
+                                    )">Edit</button>
+                                <a class="btn btn-danger" href="management.php?delete=<?= urlencode($row['LocationID']) ?>"
+                                   onclick="return confirm('Are you sure you want to delete this Location?')">Delete</a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
     </div>
