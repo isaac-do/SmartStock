@@ -3,21 +3,38 @@ $conn = new mysqli("localhost", "root", "", "smartstock");
 if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
 
+// Check if tables exists
+function table_exists($conn, $table_name)
+{
+    $table_name_escaped = $conn->real_escape_string($table_name);
+    $result = $conn->query("SHOW TABLES LIKE '$table_name_escaped'");
+    return $result && $result->num_rows > 0;
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_to'])) {
-    $to_id = $_POST['to_id'];
-    $transfer_date = $_POST['transfer_date'];
-    $from_location = $_POST['from_location'];
-    $to_location = $_POST['to_location'];
-    $item_id = $_POST['item_id'];
-    $quantity = $_POST['quantity'];
+    try {
+        $to_id = $_POST['to_id'];
+        $transfer_date = $_POST['transfer_date'];
+        $from_location = $_POST['from_location'];
+        $to_location = $_POST['to_location'];
+        $item_id = $_POST['item_id'];
+        $quantity = $_POST['quantity'];
 
-    $stmt = $conn->prepare("INSERT INTO TransferOrders (TransferID, TransferDate, FromLocation, ToLocation, ItemID, Quantity) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssi", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("INSERT INTO TransferOrders (TransferID, TransferDate, FromLocation, ToLocation, ItemID, Quantity) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssi", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity);
+        $stmt->execute();
+        $stmt->close();
 
-    header("Location: transferorder.php");
-    exit;
+        header("Location: transferorder.php");
+        exit;
+    } catch (mysqli_sql_exception $e) {
+        if (str_contains($e->getMessage(), 'foreign key constraint fails')) {
+            header("Location: error.php?code=fk_transfer_order_item_id");
+        } else {
+            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+        }
+        exit;
+    }
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_to'])) {
@@ -54,7 +71,7 @@ if (isset($_GET['delete'])) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Transfer Orders | SmartStock ERP</title>
+    <title>Transfer Orders</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -80,7 +97,6 @@ if (isset($_GET['delete'])) {
             </form>
         </div>
 
-        <!-- This is the TO create form-->
         <div id="createForm" class="toggle-form">
             <form method="POST">
                 <h2>Create New Transfer Order</h2>
@@ -88,19 +104,19 @@ if (isset($_GET['delete'])) {
                 <input type="text" id="to_id" name="to_id" required />
 
                 <label for="transfer_date">Transfer Date</label>
-                <input type="date" id="transfer_date" name="transfer_date" required/>
+                <input type="date" id="transfer_date" name="transfer_date" required />
 
                 <label for="from_location">From Location</label>
-                <input type="text" id="from_location" name="from_location" required/>
+                <input type="text" id="from_location" name="from_location" required />
 
                 <label for="to_location">To Location</label>
-                <input type="text" id="to_location" name="to_location" required/>
+                <input type="text" id="to_location" name="to_location" required />
 
                 <label for="item_id">Item ID</label>
-                <input type="text" id="item_id" name="item_id" required/>
+                <input type="text" id="item_id" name="item_id" required />
 
                 <label for="quantity">Quantity</label>
-                <input type="number" id="quantity" name="quantity" required/>
+                <input type="number" id="quantity" name="quantity" required />
 
                 <button class="btn" type="submit" name="create_to" onclick="alert('TO Created.')">Create</button>
             </form>
@@ -111,7 +127,7 @@ if (isset($_GET['delete'])) {
                 <div class="modal-content">
                     <h2>Edit Purchase Order</h2>
                     <div class="form-group">
-                        <label>TransferID</label>
+                        <label>Transfer ID</label>
                         <input type="text" id="edit_to_id" name="edit_to_id" readonly />
                     </div>
                     <div class="form-group">
@@ -151,43 +167,49 @@ if (isset($_GET['delete'])) {
                     <th>Actions</th>
                 </tr>
             </thead>
-            <!--Temporary data. Will need to implement PHP to pull from database.-->
-            <tbody id="toTable">
-                <?php
-                $search = isset($_GET['search']) ? $_GET['search'] : '';
-                if (!empty($search)) {
-                    $stmt = $conn->prepare("SELECT * FROM TransferOrders WHERE TransferID LIKE ?");
-                    $likeSearch = "%$search%";
-                    $stmt->bind_param("s", $likeSearch);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                } 
-                else
-                    $result = $conn->query("SELECT * FROM TransferOrders");
+            <tbody>
+                <?php if (table_exists($conn, 'transferorders')): ?>
+                    <?php
+                    $search = isset($_GET['search']) ? $_GET['search'] : '';
+                    if (!empty($search)) {
+                        $stmt = $conn->prepare("SELECT * FROM TransferOrders WHERE TransferID LIKE ?");
+                        $likeSearch = "%$search%";
+                        $stmt->bind_param("s", $likeSearch);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                    } else
+                        $result = $conn->query("SELECT * FROM TransferOrders");
 
-                while ($row = $result->fetch_assoc()): ?>
+                    while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row["TransferID"]) ?></td>
+                            <td><?= htmlspecialchars($row["TransferDate"]) ?></td>
+                            <td><?= htmlspecialchars($row["FromLocation"]) ?></td>
+                            <td><?= htmlspecialchars($row["ToLocation"]) ?></td>
+                            <td><?= htmlspecialchars($row["ItemID"]) ?></td>
+                            <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                            <td class="actions-row">
+                                <button class="btn"
+                                    onclick="showEditForm(
+                                    '<?= htmlspecialchars($row['TransferID']) ?>',
+                                    '<?= htmlspecialchars($row['TransferDate']) ?>',
+                                    '<?= htmlspecialchars($row['FromLocation']) ?>',
+                                    '<?= htmlspecialchars($row['ToLocation']) ?>',
+                                    '<?= htmlspecialchars($row['ItemID']) ?>',
+                                    '<?= htmlspecialchars($row['Quantity']) ?>'
+                                    )">Edit</button>
+                                <nav class="topnav">
+                                    <a class="btn btn-danger" href="transferorder.php?delete=<?= urlencode($row['TransferID']) ?>"
+                                        onclick="return confirm('Are you sure you want to delete this Purchase Order?')">Delete</a>
+                                </nav>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
                     <tr>
-                        <td><?= htmlspecialchars($row["TransferID"]) ?></td>
-                        <td><?= htmlspecialchars($row["TransferDate"]) ?></td>
-                        <td><?= htmlspecialchars($row["FromLocation"]) ?></td>
-                        <td><?= htmlspecialchars($row["ToLocation"]) ?></td>
-                        <td><?= htmlspecialchars($row["ItemID"]) ?></td>
-                        <td><?= htmlspecialchars($row["Quantity"]) ?></td>
-                        <td class="actions-row">
-                            <button class="btn"
-                                onclick="showEditForm(
-                                '<?= htmlspecialchars($row['TransferID']) ?>',
-                                '<?= htmlspecialchars($row['TransferDate']) ?>',
-                                '<?= htmlspecialchars($row['FromLocation']) ?>',
-                                '<?= htmlspecialchars($row['ToLocation']) ?>',
-                                '<?= htmlspecialchars($row['ItemID']) ?>',
-                                '<?= htmlspecialchars($row['Quantity']) ?>'
-                                )">Edit</button>
-                            <a class="btn btn-danger" href="transferorder.php?delete=<?= urlencode($row['TransferID']) ?>"
-                                onclick="return confirm('Are you sure you want to delete this Purchase Order?')">Delete</a>
-                        </td>
+                        <td colspan="5" style="color:red;">Error: Table 'transferorders' not found.</td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -210,6 +232,19 @@ if (isset($_GET['delete'])) {
         function closeEditForm() {
             document.getElementById('editForm').style.display = 'none';
         }
+
+        // save the scroll position and prevent the page from reloading to the top
+        window.addEventListener("beforeunload", function() {
+            localStorage.setItem("scrollY", window.scrollY);
+        });
+
+        window.addEventListener("load", function() {
+            const scrollY = localStorage.getItem("scrollY");
+            if (scrollY !== null) {
+                window.scrollTo(0, parseInt(scrollY));
+                localStorage.removeItem("scrollY");
+            }
+        });
     </script>
 </body>
 

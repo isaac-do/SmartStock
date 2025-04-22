@@ -3,6 +3,14 @@ $conn = new mysqli("localhost", "root", "", "smartstock");
 if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
 
+// Check if tables exists
+function table_exists($conn, $table_name)
+{
+    $table_name_escaped = $conn->real_escape_string($table_name);
+    $result = $conn->query("SHOW TABLES LIKE '$table_name_escaped'");
+    return $result && $result->num_rows > 0;
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_po'])) {
     $po_id = $_POST['po_id'];
     $customer_id = $_POST['po_customer'];
@@ -34,8 +42,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_po'])) {
     exit;
 }
 
-if (isset($_GET['delete'])) {
-    $po_id = $_GET['delete'];
+if (isset($_GET['delete_po'])) {
+    $po_id = $_GET['delete_po'];
 
     $stmt = $conn->prepare("DELETE FROM PurchaseOrders WHERE POID = ?");
     $stmt->bind_param("s", $po_id);
@@ -51,7 +59,7 @@ if (isset($_GET['delete'])) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Purchase Orders | SmartStock ERP</title>
+    <title>Purchase Orders</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -72,8 +80,8 @@ if (isset($_GET['delete'])) {
         <div class="actions">
             <button class="btn" onclick="showCreateForm()">Create Purchase Order</button>
             <form method="GET">
-                <input type="text" id="searchInput" name="search" placeholder="Search PO ID" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" />
-                <button class="btn" type="Submit">Search</button>
+                <input type="text" id="searchInput" name="po_search" placeholder="Search PO ID" value="<?= isset($_GET['po_search']) ? htmlspecialchars($_GET['po_search']) : '' ?>" />
+                <button class="btn" type="submit">Search</button>
             </form>
         </div>
 
@@ -114,7 +122,7 @@ if (isset($_GET['delete'])) {
                     </div>
                     <div class="form-group">
                         <label>Order ID</label>
-                        <input type="text" id="edit_order_id" name="edit_order_id" disabled />
+                        <input type="text" id="edit_order_id" name="edit_order_id" />
                     </div>
                     <div class="form-group">
                         <label>Estimated Delivery Date</label>
@@ -140,41 +148,47 @@ if (isset($_GET['delete'])) {
                     <th>Actions</th>
                 </tr>
             </thead>
-            <!--Temporary data. Will need to implement PHP to pull from database.-->
-            <tbody id="poTable">
-                <?php
-                $search = isset($_GET['search']) ? $_GET['search'] : '';
-                if (!empty($search)) {
-                    $stmt = $conn->prepare("SELECT * FROM PurchaseOrders WHERE POID LIKE ?");
-                    $likeSearch = "%$search%";
-                    $stmt->bind_param("s", $likeSearch);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                } 
-                else
-                    $result = $conn->query("SELECT * FROM PurchaseOrders");
+            <tbody>
+                <?php if (table_exists($conn, 'purchaseorders')): ?>
+                    <?php
+                    $search = isset($_GET['po_search']) ? $_GET['po_search'] : '';
+                    if (!empty($search)) {
+                        $stmt = $conn->prepare("SELECT * FROM PurchaseOrders WHERE POID LIKE ?");
+                        $likeSearch = "%$search%";
+                        $stmt->bind_param("s", $likeSearch);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                    } else
+                        $result = $conn->query("SELECT * FROM PurchaseOrders");
 
-                while ($row = $result->fetch_assoc()): ?>
+                    while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row["POID"]) ?></td>
+                            <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
+                            <td><?= htmlspecialchars($row["OrderID"]) ?></td>
+                            <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
+                            <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                            <td class="actions-row">
+                                <button class="btn"
+                                    onclick="showEditForm(
+                                    '<?= htmlspecialchars($row['POID']) ?>',
+                                    '<?= htmlspecialchars($row['CustomerID']) ?>',
+                                    '<?= htmlspecialchars($row['OrderID']) ?>',
+                                    '<?= htmlspecialchars($row['DeliveryDate']) ?>',
+                                    '<?= htmlspecialchars($row['Quantity']) ?>'
+                                    )">Edit</button>
+                                <nav class="topnav">
+                                    <a class="btn btn-danger" href="purchaseorder.php?delete_po=<?= urlencode($row['POID']) ?>"
+                                        onclick="return confirm('Are you sure you want to delete this Purchase Order?')">Delete</a>
+                                </nav>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
                     <tr>
-                        <td><?= htmlspecialchars($row["POID"]) ?></td>
-                        <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
-                        <td><?= htmlspecialchars($row["OrderID"]) ?></td>
-                        <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
-                        <td><?= htmlspecialchars($row["Quantity"]) ?></td>
-                        <td class="actions-row">
-                            <button class="btn"
-                                onclick="showEditForm(
-                                '<?= htmlspecialchars($row['POID']) ?>',
-                                '<?= htmlspecialchars($row['CustomerID']) ?>',
-                                '<?= htmlspecialchars($row['OrderID']) ?>',
-                                '<?= htmlspecialchars($row['DeliveryDate']) ?>',
-                                '<?= htmlspecialchars($row['Quantity']) ?>'
-                                )">Edit</button>
-                            <a class="btn btn-danger" href="purchaseorder.php?delete=<?= urlencode($row['POID']) ?>"
-                                onclick="return confirm('Are you sure you want to delete this Purchase Order?')">Delete</a>
-                        </td>
+                        <td colspan="5" style="color:red;">Error: Table 'purchaseorders' not found.</td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -196,6 +210,19 @@ if (isset($_GET['delete'])) {
         function closeEditForm() {
             document.getElementById('editForm').style.display = 'none';
         }
+
+        // save the scroll position and prevent the page from reloading to the top
+        window.addEventListener("beforeunload", function() {
+            localStorage.setItem("scrollY", window.scrollY);
+        });
+
+        window.addEventListener("load", function() {
+            const scrollY = localStorage.getItem("scrollY");
+            if (scrollY !== null) {
+                window.scrollTo(0, parseInt(scrollY));
+                localStorage.removeItem("scrollY");
+            }
+        });
     </script>
 </body>
 

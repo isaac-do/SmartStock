@@ -3,6 +3,28 @@ $conn = new mysqli("localhost", "root", "", "smartstock");
 
 if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+function query_count($conn, $table)
+{
+    try {
+        $stmt = $conn->query("SELECT COUNT(*) as total FROM $table");
+        $row = $stmt->fetch_assoc();
+        return $row['total'];
+    } catch (mysqli_sql_exception $e) {
+        return "Error: Table '$table' not found.";
+    }
+}
+
+function query_tables($conn, $table)
+{
+    try {
+        return $conn->query("SELECT * FROM $table");
+    } catch (mysqli_sql_exception $e) {
+        return false;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,21 +53,15 @@ if ($conn->connect_error)
         <div class="card-container">
             <div class="card">
                 <h3>Total Items</h3>
-                <p>
-                <?php
-                    $result = $conn->query("SELECT COUNT(*) as total FROM items");
-                    $row = $result->fetch_assoc();
-                    echo $row['total'];?>
-                </p>
+                <p><?= query_count($conn, 'items') ?></p>
             </div>
             <div class="card">
                 <h3>Purchase Orders</h3>
-                <p>
-                <?php
-                    $result = $conn->query("SELECT COUNT(*) as total FROM purchaseorders");
-                    $row = $result->fetch_assoc();
-                    echo $row['total'];?>
-                </p>
+                <p><?= query_count($conn, 'purchaseorders') ?></p>
+            </div>
+            <div class="card">
+                <h3>Transfer Orders</h3>
+                <p><?= query_count($conn, 'transferorders') ?></p>
             </div>
         </div>
         <section class="section-table">
@@ -61,18 +77,22 @@ if ($conn->connect_error)
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $sql = "SELECT * FROM PurchaseOrders";
-                    $result = $conn->query($sql);
-                    while ($row = $result->fetch_assoc()): ?>
+                    <?php $result = query_tables($conn, 'purchaseorders'); ?>
+                    <?php if ($result): ?>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row["POID"]) ?></td>
+                                <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
+                                <td><?= htmlspecialchars($row["OrderID"]) ?></td>
+                                <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
+                                <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?= htmlspecialchars($row["POID"]) ?></td>
-                            <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
-                            <td><?= htmlspecialchars($row["OrderID"]) ?></td>
-                            <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
-                            <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                            <td colspan="5" style="color:red;">Error: Table 'purchaseorders' not found.</td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </section>
@@ -90,22 +110,23 @@ if ($conn->connect_error)
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>T001</td>
-                        <td>01-01-2025</td>
-                        <td>Warehouse A</td>
-                        <td>Store B</td>
-                        <td>ITEM002</td>
-                        <td>10</td>
-                    </tr>
-                    <tr>
-                        <td>T002</td>
-                        <td>03-10-2023</td>
-                        <td>Warehouse B</td>
-                        <td>Store A</td>
-                        <td>ITEM001</td>
-                        <td>20</td>
-                    </tr>
+                    <?php $result = query_tables($conn, 'transferorders'); ?>
+                    <?php if ($result): ?>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row["TransferID"]) ?></td>
+                                <td><?= htmlspecialchars($row["TransferDate"]) ?></td>
+                                <td><?= htmlspecialchars($row["FromLocation"]) ?></td>
+                                <td><?= htmlspecialchars($row["ToLocation"]) ?></td>
+                                <td><?= htmlspecialchars($row["ItemID"]) ?></td>
+                                <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" style="color:red;">Error: Table 'transferorders' not found.</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </section>
