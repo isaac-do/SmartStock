@@ -517,10 +517,10 @@ if (isset($_GET['delete'])) {
             <table>
                 <thead>
                     <tr>
-                        <th>Address</th>
-                        <th>Location Type</th>
-                        <th>Location Name</th>
                         <th>Location ID</th>
+                        <th>Location Name</th>
+                        <th>Location Type</th>
+                        <th>Address</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -539,10 +539,11 @@ if (isset($_GET['delete'])) {
                 
                     while ($row = $result->fetch_assoc()): ?>
                         <tr>
-                            <td><?= htmlspecialchars($row["Address"]) ?></td>
-                            <td><?= htmlspecialchars($row["LocationType"]) ?></td>
+                            <td><?= htmlspecialchars($row["LocationID"]) ?></td>    
                             <td><?= htmlspecialchars($row["LocationName"]) ?></td>
-                            <td><?= htmlspecialchars($row["LocationID"]) ?></td>
+                            <td><?= htmlspecialchars($row["LocationType"]) ?></td>
+                            <td><?= htmlspecialchars($row["Address"]) ?></td>
+                            
                             <td class="actions-row">
                                 <button class="btn"
                                     onclick="showLocationEditForm(
