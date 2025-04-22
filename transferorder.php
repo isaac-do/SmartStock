@@ -11,59 +11,86 @@ function table_exists($conn, $table_name)
     return $result && $result->num_rows > 0;
 }
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_to'])) {
-    try {
-        $to_id = $_POST['to_id'];
-        $transfer_date = $_POST['transfer_date'];
-        $from_location = $_POST['from_location'];
-        $to_location = $_POST['to_location'];
-        $item_id = $_POST['item_id'];
-        $quantity = $_POST['quantity'];
+// Check if the table has the entity
+function exists_in_table($conn, $table, $column, $value) {
+    $stmt = $conn->prepare("SELECT 1 FROM $table WHERE $column = ? LIMIT 1");
+    $stmt->bind_param("s", $value);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->num_rows > 0;
+}
 
-        $stmt = $conn->prepare("INSERT INTO TransferOrders (TransferID, TransferDate, FromLocation, ToLocation, ItemID, Quantity) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssi", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity);
-        $stmt->execute();
-        $stmt->close();
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST['create_to'])) {
+        try {
+            $to_id = $_POST['to_id'];
+            $transfer_date = $_POST['transfer_date'];
+            $from_location = $_POST['from_location'];
+            $to_location = $_POST['to_location'];
+            $item_id = $_POST['item_id'];
+            $quantity = $_POST['quantity'];
 
-        header("Location: transferorder.php");
-        exit;
-    } catch (mysqli_sql_exception $e) {
-        if (str_contains($e->getMessage(), 'foreign key constraint fails')) {
-            header("Location: error.php?code=fk_transfer_order_item_id");
-        } else {
+            // Foreign key checks
+            if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
+                header("Location: error.php?code=fk_transfer_order_item_id");
+                exit;
+            }
+            if (!exists_in_table($conn, "Location", "LocationID", $from_location)) {
+                header("Location: error.php?code=fk_transfer_from_location");
+                exit;
+            }
+            if (!exists_in_table($conn, "Location", "LocationID", $to_location)) {
+                header("Location: error.php?code=fk_transfer_to_location");
+                exit;
+            }
+
+            $stmt = $conn->prepare("INSERT INTO TransferOrders (TransferID, TransferDate, FromLocation, ToLocation, ItemID, Quantity) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssssi", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity);
+
+            if ($stmt->execute())
+                $successMessage = "Transfer Order created successfully!";
+            else
+                $errorMessage = "Error: " . $stmt->error;
+
+            $stmt->close();
+        } catch (mysqli_sql_exception $e) {
             header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+            exit;
         }
-        exit;
     }
-}
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_to'])) {
-    $to_id = $_POST['edit_to_id'];
-    $transfer_date = $_POST['edit_transfer_date'];
-    $from_location = $_POST['edit_from_location'];
-    $to_location = $_POST['edit_to_location'];
-    $item_id = $_POST['edit_item_id'];
-    $quantity = $_POST['edit_quantity'];
+    if (isset($_POST['update_to'])) {
+        $to_id = $_POST['edit_to_id'];
+        $transfer_date = $_POST['edit_transfer_date'];
+        $from_location = $_POST['edit_from_location'];
+        $to_location = $_POST['edit_to_location'];
+        $item_id = $_POST['edit_item_id'];
+        $quantity = $_POST['edit_quantity'];
 
-    $stmt = $conn->prepare("UPDATE TransferOrders SET TransferID=?, TransferDate=?, FromLocation=?, ToLocation=?, ItemID=?, Quantity=? WHERE TransferID=?");
-    $stmt->bind_param("sssssis", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity, $to_id);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("UPDATE TransferOrders SET TransferID=?, TransferDate=?, FromLocation=?, ToLocation=?, ItemID=?, Quantity=? WHERE TransferID=?");
+        $stmt->bind_param("sssssis", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity, $to_id);
 
-    header("Location: transferorder.php");
-    exit;
-}
+        if ($stmt->execute())
+            $successMessage = "Transfer Order updated successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
 
-if (isset($_GET['delete'])) {
-    $to_id = $_GET['delete'];
+        $stmt->close();
+    }
 
-    $stmt = $conn->prepare("DELETE FROM TransferOrders WHERE TransferID = ?");
-    $stmt->bind_param("s", $to_id);
-    $stmt->execute();
-    $stmt->close();
+    if (isset($_POST['delete'])) {
+        $to_id = $_POST['delete'];
 
-    header("Location: transferorder.php");
-    exit;
+        $stmt = $conn->prepare("DELETE FROM TransferOrders WHERE TransferID = ?");
+        $stmt->bind_param("s", $to_id);
+
+        if ($stmt->execute())
+            $successMessage = "Transfer Order deleted successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+
+        $stmt->close();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -89,6 +116,15 @@ if (isset($_GET['delete'])) {
 
     <div class="dashboard">
         <h1>Transfer Orders</h1>
+
+        <?php if (isset($successMessage)): ?>
+            <div class="notification success"><?php echo $successMessage; ?></div>
+        <?php endif; ?>
+
+        <?php if (isset($errorMessage)): ?>
+            <div class="notification error"><?php echo $errorMessage; ?></div>
+        <?php endif; ?>
+
         <div class="actions">
             <button class="btn" onclick="showCreateForm()">Create Transfer Order</button>
             <form method="GET">
@@ -118,7 +154,7 @@ if (isset($_GET['delete'])) {
                 <label for="quantity">Quantity</label>
                 <input type="number" id="quantity" name="quantity" required />
 
-                <button class="btn" type="submit" name="create_to" onclick="alert('TO Created.')">Create</button>
+                <button class="btn" type="submit" name="create_to">Create</button>
             </form>
         </div>
         <!-- This is the TO edit form-->
@@ -150,10 +186,24 @@ if (isset($_GET['delete'])) {
                         <label>Quantity</label>
                         <input type="number" id="edit_quantity" name="edit_quantity" />
                     </div>
-                    <button class="btn" type="submit" name="update_to" onclick="alert('Changes saved.')">Save Changes</button>
+                    <button class="btn" type="submit" name="update_to">Save Changes</button>
                     <button class="btn btn-secondary" onclick="closeEditForm()">Cancel</button>
                 </div>
             </form>
+        </div>
+        <!-- Confirmation Dialog -->
+        <div id="confirmDialog" class="confirm-dialog">
+            <div class="confirm-content">
+                <h3>Confirm Delete</h3>
+                <p>Are you sure you want to delete this Transfer Order? This action cannot be undone.</p>
+                <form method="POST" action="" id="deleteForm">
+                    <input type="hidden" id="delete_po_id" name="delete_po_id" value="">
+                    <div class="confirm-buttons">
+                        <button type="submit" name="delete_po" class="btn">Delete</button>
+                        <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
         <table>
             <thead>
@@ -179,32 +229,34 @@ if (isset($_GET['delete'])) {
                         $result = $stmt->get_result();
                     } else
                         $result = $conn->query("SELECT * FROM TransferOrders");
-
-                    while ($row = $result->fetch_assoc()): ?>
+                    if ($result && $result->num_rows > 0):
+                        while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row["TransferID"]) ?></td>
+                                <td><?= htmlspecialchars($row["TransferDate"]) ?></td>
+                                <td><?= htmlspecialchars($row["FromLocation"]) ?></td>
+                                <td><?= htmlspecialchars($row["ToLocation"]) ?></td>
+                                <td><?= htmlspecialchars($row["ItemID"]) ?></td>
+                                <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                                <td class="actions-row">
+                                    <button class="btn"
+                                        onclick="showEditForm(
+                                        '<?= htmlspecialchars($row['TransferID']) ?>',
+                                        '<?= htmlspecialchars($row['TransferDate']) ?>',
+                                        '<?= htmlspecialchars($row['FromLocation']) ?>',
+                                        '<?= htmlspecialchars($row['ToLocation']) ?>',
+                                        '<?= htmlspecialchars($row['ItemID']) ?>',
+                                        '<?= htmlspecialchars($row['Quantity']) ?>'
+                                        )">Edit</button>
+                                    <button class="btn btn-danger" onclick="confirmDelete('<?= htmlspecialchars($row['TransferID']) ?>')">Delete</button>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?= htmlspecialchars($row["TransferID"]) ?></td>
-                            <td><?= htmlspecialchars($row["TransferDate"]) ?></td>
-                            <td><?= htmlspecialchars($row["FromLocation"]) ?></td>
-                            <td><?= htmlspecialchars($row["ToLocation"]) ?></td>
-                            <td><?= htmlspecialchars($row["ItemID"]) ?></td>
-                            <td><?= htmlspecialchars($row["Quantity"]) ?></td>
-                            <td class="actions-row">
-                                <button class="btn"
-                                    onclick="showEditForm(
-                                    '<?= htmlspecialchars($row['TransferID']) ?>',
-                                    '<?= htmlspecialchars($row['TransferDate']) ?>',
-                                    '<?= htmlspecialchars($row['FromLocation']) ?>',
-                                    '<?= htmlspecialchars($row['ToLocation']) ?>',
-                                    '<?= htmlspecialchars($row['ItemID']) ?>',
-                                    '<?= htmlspecialchars($row['Quantity']) ?>'
-                                    )">Edit</button>
-                                <nav class="topnav">
-                                    <a class="btn btn-danger" href="transferorder.php?delete=<?= urlencode($row['TransferID']) ?>"
-                                        onclick="return confirm('Are you sure you want to delete this Purchase Order?')">Delete</a>
-                                </nav>
-                            </td>
+                            <td colspan="6" style="color:gray;">No transfer orders found.</td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="5" style="color:red;">Error: Table 'transferorders' not found.</td>
@@ -233,18 +285,22 @@ if (isset($_GET['delete'])) {
             document.getElementById('editForm').style.display = 'none';
         }
 
-        // save the scroll position and prevent the page from reloading to the top
-        window.addEventListener("beforeunload", function() {
-            localStorage.setItem("scrollY", window.scrollY);
-        });
+        function confirmDelete(po_id) {
+            document.getElementById('delete_po_id').value = po_id;
+            document.getElementById('confirmDialog').style.display = 'flex';
+        }
 
-        window.addEventListener("load", function() {
-            const scrollY = localStorage.getItem("scrollY");
-            if (scrollY !== null) {
-                window.scrollTo(0, parseInt(scrollY));
-                localStorage.removeItem("scrollY");
-            }
-        });
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').style.display = 'none';
+        }
+
+        // Auto-hide notifications after 5 seconds
+        setTimeout(function() {
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach(function(notification) {
+                notification.style.display = 'none';
+            });
+        }, 5000);
     </script>
 </body>
 

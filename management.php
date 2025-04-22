@@ -13,212 +13,251 @@ function table_exists($conn, $table_name)
     return $result && $result->num_rows > 0;
 }
 
+// Check if the table has the entity
+function exists_in_table($conn, $table, $column, $value) {
+    $stmt = $conn->prepare("SELECT 1 FROM $table WHERE $column = ? LIMIT 1");
+    $stmt->bind_param("s", $value);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->num_rows > 0;
+}
+
 // CREATE CUSTOMER 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_customer'])) {
-    try {
-        $customer_id = $_POST['customer_id'];
-        $customer_name = $_POST['customer_name'];
-        $customer_type = $_POST['customer_type'];
-        $sales_rep_id = $_POST['cust_sales_rep_id'];
-        $billing_address = $_POST['cust_billing_address'];
-        $shipping_address = $_POST['cust_shipping_address'];
-        $email = $_POST['cust_email'];
-        $phone_number = $_POST['cust_phone_number'];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST['create_customer'])) {
+        try {
+            $customer_id = $_POST['customer_id'];
+            $customer_name = $_POST['customer_name'];
+            $customer_type = $_POST['customer_type'];
+            $sales_rep_id = $_POST['cust_sales_rep_id'];
+            $billing_address = $_POST['cust_billing_address'];
+            $shipping_address = $_POST['cust_shipping_address'];
+            $email = $_POST['cust_email'];
+            $phone_number = $_POST['cust_phone_number'];
 
-        $stmt = $conn->prepare("INSERT INTO Customer (CustomerID, CompanyName, CustomerType, SalesRepID, BillingAddress, ShippingAddress, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $customer_id, $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number);
-        $stmt->execute();
-        $stmt->close();
+            // Foreign key checks
+            if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
+                header("Location: error.php?code=fk_customer_salesrep");
+                exit;
+            }
 
-        header("Location: management.php");
-        exit;
-    } catch (mysqli_sql_exception $e) {
-        if (str_contains($e->getMessage(), 'foreign key constraint fails')) {
-            header("Location: error.php?code=fk_customer_salesrep");
-        } else {
+            $stmt = $conn->prepare("INSERT INTO Customer (CustomerID, CompanyName, CustomerType, SalesRepID, BillingAddress, ShippingAddress, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssssss", $customer_id, $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number);
+
+            if ($stmt->execute())
+                $successMessage = "Customer Record created successfully!";
+            else
+                $errorMessage = "Error: " . $stmt->error;
+
+            $stmt->close();
+        } catch (mysqli_sql_exception $e) {
             header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+            exit;
         }
-        exit;
     }
-}
 
-// UPDATE CUSTOMER 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_customer'])) {
-    $customer_id = $_POST['edit_customer_id'];
-    $customer_name = $_POST['edit_cust_name'];
-    $customer_type = $_POST['edit_cust_type'];
-    $sales_rep_id = $_POST['edit_cust_sales_rep_id'];
-    $billing_address = $_POST['edit_cust_bill_address'];
-    $shipping_address = $_POST['edit_cust_ship_address'];
-    $email = $_POST['edit_cust_email'];
-    $phone_number = $_POST['edit_cust_phone_number'];
+    // UPDATE CUSTOMER 
+    if (isset($_POST['update_customer'])) {
+        $customer_id = $_POST['edit_customer_id'];
+        $customer_name = $_POST['edit_cust_name'];
+        $customer_type = $_POST['edit_cust_type'];
+        $sales_rep_id = $_POST['edit_cust_sales_rep_id'];
+        $billing_address = $_POST['edit_cust_bill_address'];
+        $shipping_address = $_POST['edit_cust_ship_address'];
+        $email = $_POST['edit_cust_email'];
+        $phone_number = $_POST['edit_cust_phone_number'];
 
-    $stmt = $conn->prepare("UPDATE Customer SET CompanyName=?, CustomerType=?, SalesRepID=?, BillingAddress=?, ShippingAddress=?, Email=?, PhoneNumber=? WHERE CustomerID=?");
-    $stmt->bind_param("ssssssss", $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number, $customer_id);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("UPDATE Customer SET CompanyName=?, CustomerType=?, SalesRepID=?, BillingAddress=?, ShippingAddress=?, Email=?, PhoneNumber=? WHERE CustomerID=?");
+        $stmt->bind_param("ssssssss", $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number, $customer_id);
 
-    header("Location: management.php");
-    exit;
-}
+        if ($stmt->execute())
+            $successMessage = "Customer Record updated successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
 
-// DELETE CUSTOMER 
-if (isset($_GET['delete_customer'])) {
-    $customer_id = $_GET['delete_customer'];
-
-    $stmt = $conn->prepare("DELETE FROM Customer WHERE CustomerID = ?");
-    $stmt->bind_param("s", $customer_id);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: management.php");
-    exit;
-}
-
-// CREATE LOCATION 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_location'])) {
-    $location_id = $_POST['location_id'];
-    $location_name = $_POST['location_name'];
-    $location_type = $_POST['location_type'];
-    $location_address = $_POST['location_address'];
-
-    $stmt = $conn->prepare("INSERT INTO locations (LocationID, LocationName, LocationType, Address) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $location_id, $location_name, $location_type, $location_address);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: management.php");
-    exit;
-}
-
-// UPDATE LOCATION 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_location'])) {
-    $location_id = $_POST['edit_location_id'];
-    $location_name = $_POST['edit_location_name'];
-    $location_type = $_POST['edit_location_type'];
-    $location_address = $_POST['edit_location_address'];
-
-    $stmt = $conn->prepare("UPDATE locations SET LocationName=?, LocationType=?, Address=? WHERE LocationID=?");
-    $stmt->bind_param("ssss", $location_name, $location_type, $location_address, $location_id);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: management.php");
-    exit;
-}
-
-// DELETE LOCATION 
-if (isset($_GET['delete_location'])) {
-    $location_id = $_GET['delete_location'];
-
-    $stmt = $conn->prepare("DELETE FROM locations WHERE LocationID = ?");
-    $stmt->bind_param("s", $location_id);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: management.php");
-    exit;
-}
-
-// CREATE Supplier
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_supplier'])) {
-    try {
-        $supplier_id = $_POST['supplier_id'];
-        $supplier_name = $_POST['supplier_name'];
-        $sales_rep_id = $_POST['supp_sales_rep_id'];
-        $address = $_POST['supplier_address'];
-        $email = $_POST['supplier_email'];
-        $phone_number = $_POST['supplier_phone_number'];
-
-        $stmt = $conn->prepare("INSERT INTO supplier (SupplierID, SupplierName, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $supplier_id, $supplier_name, $sales_rep_id, $address, $email, $phone_number);
-        $stmt->execute();
         $stmt->close();
-
-        header("Location: management.php");
-        exit;
-    } catch (mysqli_sql_exception $e) {
-        if (str_contains($e->getMessage(), 'foreign key constraint fails')) {
-            header("Location: error.php?code=fk_supplier_salesrep");
-        } else {
-            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
-        }
-        exit;
     }
-}
 
-// UPDATE Supplier
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_supplier'])) {
-    $supplier_id = $_POST['edit_supp_id'];
-    $supplier_name = $_POST['edit_supp_name'];
-    $sales_rep_id = $_POST['edit_supp_sales_rep_id'];
-    $address = $_POST['edit_supp_address'];
-    $email = $_POST['edit_supp_email'];
-    $phone_number = $_POST['edit_supp_phone_number'];
+    // DELETE CUSTOMER 
+    if (isset($_POST['delete_cust'])) {
+        $customer_id = $_POST['delete_cust_id'];
 
-    $stmt = $conn->prepare("UPDATE supplier SET SupplierName=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
-    $stmt->bind_param("ssssss", $supplier_name, $sales_rep_id, $address, $email, $phone_number, $supplier_id);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("DELETE FROM Customer WHERE CustomerID = ?");
+        $stmt->bind_param("s", $customer_id);
 
-    header("Location: management.php");
-    exit;
-}
+        if ($stmt->execute())
+            $successMessage = "Customer Record deleted successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
 
-// DELETE Supplier
-if (isset($_GET['delete_supplier'])) {
-    $delete_id = $_GET['delete_supplier'];
+        $stmt->close();
+    }
 
-    // Check if it's a SupplierID or a SalesRepID (optional logic split)
-    $stmt = $conn->prepare("DELETE FROM supplier WHERE SupplierID = ?");
-    $stmt->bind_param("s", $delete_id);
-    $stmt->execute();
-    $stmt->close();
+    // CREATE LOCATION 
+    if (isset($_POST['create_location'])) {
+        $location_id = $_POST['location_id'];
+        $location_name = $_POST['location_name'];
+        $location_type = $_POST['location_type'];
+        $location_address = $_POST['location_address'];
 
-    header("Location: management.php");
-    exit;
-}
+        $stmt = $conn->prepare("INSERT INTO locations (LocationID, LocationName, LocationType, Address) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $location_id, $location_name, $location_type, $location_address);
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_sr'])) {
-    $sales_id = $_POST['sales_id'];
-    $name = $_POST['sales_name'];
-    $email = $_POST['sales_email'];
-    $phone_number = $_POST['sales_phone_number'];
+        if ($stmt->execute())
+            $successMessage = "Location Record created successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
 
-    $stmt = $conn->prepare("INSERT INTO SalesRepresentative (SalesRepID, Name, Email, PhoneNumber) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $sales_id, $name, $email, $phone_number);
-    $stmt->execute();
-    $stmt->close();
+        $stmt->close();
+    }
 
-    header("Location: management.php");
-    exit;
-}
+    // UPDATE LOCATION 
+    if (isset($_POST['update_location'])) {
+        $location_id = $_POST['edit_location_id'];
+        $location_name = $_POST['edit_location_name'];
+        $location_type = $_POST['edit_location_type'];
+        $location_address = $_POST['edit_location_address'];
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_sr'])) {
-    $sales_id = $_POST['edit_sales_id'];
-    $name = $_POST['edit_sales_name'];
-    $email = $_POST['edit_sales_email'];
-    $phone_number = $_POST['edit_sales_phone_number'];
+        $stmt = $conn->prepare("UPDATE locations SET LocationName=?, LocationType=?, Address=? WHERE LocationID=?");
+        $stmt->bind_param("ssss", $location_name, $location_type, $location_address, $location_id);
 
-    $stmt = $conn->prepare("UPDATE SalesRepresentative SET SalesRepID=?, Name=?, Email=?, PhoneNumber=? WHERE SalesRepID=?");
-    $stmt->bind_param("sssss", $sales_id, $name, $email, $phone_number, $sales_id);
-    $stmt->execute();
-    $stmt->close();
+        if ($stmt->execute())
+            $successMessage = "Location Record updated successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
 
-    header("Location: management.php");
-    exit;
-}
+        $stmt->close();
+    }
 
-if (isset($_GET['delete_sr'])) {
-    $sales_id = $_GET['delete_sr'];
+    // DELETE LOCATION 
+    if (isset($_POST['delete_loc'])) {
+        $location_id = $_POST['delete_loc_id'];
 
-    $stmt = $conn->prepare("DELETE FROM SalesRepresentative WHERE SalesRepID = ?");
-    $stmt->bind_param("s", $sales_id);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("DELETE FROM locations WHERE LocationID = ?");
+        $stmt->bind_param("s", $location_id);
 
-    header("Location: management.php");
-    exit;
+        if ($stmt->execute())
+            $successMessage = "Location Record deleted successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+
+        $stmt->close();
+    }
+
+    // CREATE Supplier
+    if (isset($_POST['create_supplier'])) {
+        try {
+            $supplier_id = $_POST['supplier_id'];
+            $supplier_name = $_POST['supplier_name'];
+            $sales_rep_id = $_POST['supp_sales_rep_id'];
+            $address = $_POST['supplier_address'];
+            $email = $_POST['supplier_email'];
+            $phone_number = $_POST['supplier_phone_number'];
+
+            $stmt = $conn->prepare("INSERT INTO supplier (SupplierID, SupplierName, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssss", $supplier_id, $supplier_name, $sales_rep_id, $address, $email, $phone_number);
+
+            // Foreign key checks
+            if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
+                header("Location: error.php?code=fk_supplier_salesrep");
+                exit;
+            }
+
+            if ($stmt->execute())
+                $successMessage = "Supplier Record created successfully!";
+            else
+                $errorMessage = "Error: " . $stmt->error;
+
+            $stmt->close();
+        } catch (mysqli_sql_exception $e) {
+            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+            exit;
+        }
+    }
+
+    // UPDATE Supplier
+    if (isset($_POST['update_supplier'])) {
+        $supplier_id = $_POST['edit_supp_id'];
+        $supplier_name = $_POST['edit_supp_name'];
+        $sales_rep_id = $_POST['edit_supp_sales_rep_id'];
+        $address = $_POST['edit_supp_address'];
+        $email = $_POST['edit_supp_email'];
+        $phone_number = $_POST['edit_supp_phone_number'];
+
+        $stmt = $conn->prepare("UPDATE supplier SET SupplierName=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
+        $stmt->bind_param("ssssss", $supplier_name, $sales_rep_id, $address, $email, $phone_number, $supplier_id);
+
+        if ($stmt->execute())
+            $successMessage = "Supplier Record updated successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+
+        $stmt->close();
+    }
+
+    // DELETE Supplier
+    if (isset($_POST['delete_sup'])) {
+        $delete_id = $_POST['delete_sup_id'];
+
+        // Check if it's a SupplierID or a SalesRepID (optional logic split)
+        $stmt = $conn->prepare("DELETE FROM supplier WHERE SupplierID = ?");
+        $stmt->bind_param("s", $delete_id);
+
+        if ($stmt->execute())
+            $successMessage = "Supplier Record deleted successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+
+        $stmt->close();
+    }
+
+    if (isset($_POST['create_sr'])) {
+        $sales_id = $_POST['sales_id'];
+        $name = $_POST['sales_name'];
+        $email = $_POST['sales_email'];
+        $phone_number = $_POST['sales_phone_number'];
+
+        $stmt = $conn->prepare("INSERT INTO SalesRepresentative (SalesRepID, Name, Email, PhoneNumber) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $sales_id, $name, $email, $phone_number);
+
+        if ($stmt->execute())
+            $successMessage = "Sales Rep Record created successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+
+        $stmt->close();
+    }
+
+    if (isset($_POST['update_sr'])) {
+        $sales_id = $_POST['edit_sales_id'];
+        $name = $_POST['edit_sales_name'];
+        $email = $_POST['edit_sales_email'];
+        $phone_number = $_POST['edit_sales_phone_number'];
+
+        $stmt = $conn->prepare("UPDATE SalesRepresentative SET SalesRepID=?, Name=?, Email=?, PhoneNumber=? WHERE SalesRepID=?");
+        $stmt->bind_param("sssss", $sales_id, $name, $email, $phone_number, $sales_id);
+
+        if ($stmt->execute())
+            $successMessage = "Sales Rep Record updated successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+
+        $stmt->close();
+    }
+
+    if (isset($_POST['delete_sales'])) {
+        $sales_id = $_POST['delete_sales_id'];
+
+        $stmt = $conn->prepare("DELETE FROM SalesRepresentative WHERE SalesRepID = ?");
+        $stmt->bind_param("s", $sales_id);
+
+        if ($stmt->execute())
+            $successMessage = "Sales Rep Record deleted successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+
+        $stmt->close();
+    }
 }
 ?>
 
@@ -247,6 +286,15 @@ if (isset($_GET['delete_sr'])) {
     <!-- CUSTOMER MANAGEMENT SECTION -->
     <div class="dashboard">
         <h1>Customer Management</h2>
+
+            <?php if (isset($successMessage)): ?>
+                <div class="notification success"><?php echo $successMessage; ?></div>
+            <?php endif; ?>
+
+            <?php if (isset($errorMessage)): ?>
+                <div class="notification error"><?php echo $errorMessage; ?></div>
+            <?php endif; ?>
+
             <div class="actions">
                 <button class="btn" onclick="showCustomerCreateForm()">Create Customer Record</button>
                 <form method="GET">
@@ -283,7 +331,7 @@ if (isset($_GET['delete_sr'])) {
                     <label for="cust_phone_number">Phone Number</label>
                     <input type="text" id="cust_phone_number" name="cust_phone_number" />
 
-                    <button class="btn" type="submit" name="create_customer" onclick="alert('Customer Record Created.')">Create</button>
+                    <button class="btn" type="submit" name="create_customer">Create</button>
                 </form>
             </div>
             <!-- This is the customer record edit form-->
@@ -323,10 +371,24 @@ if (isset($_GET['delete_sr'])) {
                             <label>Phone Number</label>
                             <input type="text" id="edit_cust_phone_number" name="edit_cust_phone_number" />
                         </div>
-                        <button class="btn" type="submit" name="update_customer" onclick="alert('Changes saved.')">Save Changes</button>
+                        <button class="btn" type="submit" name="update_customer">Save Changes</button>
                         <button class="btn btn-secondary" onclick="closeCustomerEditForm()">Cancel</button>
                     </div>
                 </form>
+            </div>
+            <!-- Confirmation Dialog -->
+            <div id="confirmDialog" class="confirm-dialog">
+                <div class="confirm-content">
+                    <h3>Confirm Delete</h3>
+                    <p>Are you sure you want to delete this Customer Record? This action cannot be undone.</p>
+                    <form method="POST" action="" id="deleteForm">
+                        <input type="hidden" id="delete_cust_id" name="delete_cust_id" value="">
+                        <div class="confirm-buttons">
+                            <button type="submit" name="delete_cust" class="btn">Delete</button>
+                            <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
             </div>
             <table>
                 <thead>
@@ -351,39 +413,42 @@ if (isset($_GET['delete_sr'])) {
                             $likeSearch = "%$search%";
                             $stmt->bind_param("s", $likeSearch);
                             $stmt->execute();
-                            $cust_result = $stmt->get_result();
+                            $result = $stmt->get_result();
                         } else
-                            $cust_result = $conn->query("SELECT * FROM customer");
+                            $result = $conn->query("SELECT * FROM customer");
 
-                        while ($row = $cust_result->fetch_assoc()): ?>
+                        if ($result && $result->num_rows > 0):
+                            while ($row = $result->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($row['CustomerID']) ?></td>
+                                    <td><?= htmlspecialchars($row['CompanyName']) ?></td>
+                                    <td><?= htmlspecialchars($row['CustomerType']) ?></td>
+                                    <td><?= htmlspecialchars($row['SalesRepID']) ?></td>
+                                    <td><?= htmlspecialchars($row['BillingAddress']) ?></td>
+                                    <td><?= htmlspecialchars($row['ShippingAddress']) ?></td>
+                                    <td><?= htmlspecialchars($row['Email']) ?></td>
+                                    <td><?= htmlspecialchars($row['PhoneNumber']) ?></td>
+                                    <td class="actions-row">
+                                        <button class="btn"
+                                            onclick="showCustomerEditForm(
+                                            '<?= htmlspecialchars($row['CustomerID']) ?>',
+                                            '<?= htmlspecialchars($row['CompanyName']) ?>',
+                                            '<?= htmlspecialchars($row['CustomerType']) ?>',
+                                            '<?= htmlspecialchars($row['SalesRepID']) ?>',
+                                            '<?= htmlspecialchars($row['BillingAddress']) ?>',
+                                            '<?= htmlspecialchars($row['ShippingAddress']) ?>',
+                                            '<?= htmlspecialchars($row['Email']) ?>',
+                                            '<?= htmlspecialchars($row['PhoneNumber']) ?>'
+                                            )">Edit</button>
+                                        <button class="btn btn-danger" onclick="confirmDeleteCust('<?= htmlspecialchars($row['CustomerID']) ?>')">Delete</button>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
                             <tr>
-                                <td><?= htmlspecialchars($row['CustomerID']) ?></td>
-                                <td><?= htmlspecialchars($row['CompanyName']) ?></td>
-                                <td><?= htmlspecialchars($row['CustomerType']) ?></td>
-                                <td><?= htmlspecialchars($row['SalesRepID']) ?></td>
-                                <td><?= htmlspecialchars($row['BillingAddress']) ?></td>
-                                <td><?= htmlspecialchars($row['ShippingAddress']) ?></td>
-                                <td><?= htmlspecialchars($row['Email']) ?></td>
-                                <td><?= htmlspecialchars($row['PhoneNumber']) ?></td>
-                                <td class="actions-row">
-                                    <button class="btn"
-                                        onclick="showCustomerEditForm(
-                                        '<?= htmlspecialchars($row['CustomerID']) ?>',
-                                        '<?= htmlspecialchars($row['CompanyName']) ?>',
-                                        '<?= htmlspecialchars($row['CustomerType']) ?>',
-                                        '<?= htmlspecialchars($row['SalesRepID']) ?>',
-                                        '<?= htmlspecialchars($row['BillingAddress']) ?>',
-                                        '<?= htmlspecialchars($row['ShippingAddress']) ?>',
-                                        '<?= htmlspecialchars($row['Email']) ?>',
-                                        '<?= htmlspecialchars($row['PhoneNumber']) ?>'
-                                        )">Edit</button>
-                                    <nav class="topnav">
-                                        <a class="btn btn-danger" href="management.php?delete_customer=<?= urlencode($row['CustomerID']) ?>"
-                                            onclick="return confirm('Are you sure you want to delete this Customer Record?')">Delete</a>
-                                    </nav>
-                                </td>
+                                <td colspan="6" style="color:gray;">No customer records found.</td>
                             </tr>
-                        <?php endwhile; ?>
+                        <?php endif; ?>
                     <?php else: ?>
                         <tr>
                             <td colspan="5" style="color:red;">Error: Table 'customer' not found.</td>
@@ -427,7 +492,7 @@ if (isset($_GET['delete_sr'])) {
                 <label for="supplier_phone_number">Phone Number</label>
                 <input type="text" id="supplier_phone_number" name="supplier_phone_number" required />
 
-                <button class="btn" type="submit" name="create_supplier" onclick="alert('Supplier Record Created.')">Create</button>
+                <button class="btn" type="submit" name="create_supplier">Create</button>
             </form>
         </div>
         <!-- This is the supplier record edit form-->
@@ -459,10 +524,24 @@ if (isset($_GET['delete_sr'])) {
                         <label>Phone Number</label>
                         <input type="text" id="edit_supp_phone_number" name="edit_supp_phone_number" />
                     </div>
-                    <button class="btn" type="submit" name="update_supplier" onclick="alert('Changes saved.')">Save Changes</button>
+                    <button class="btn" type="submit" name="update_supplier">Save Changes</button>
                     <button class="btn btn-secondary" onclick="closeSupplierEditForm()">Cancel</button>
                 </div>
             </form>
+        </div>
+        <!-- Confirmation Dialog -->
+        <div id="confirmDialog" class="confirm-dialog">
+            <div class="confirm-content">
+                <h3>Confirm Delete</h3>
+                <p>Are you sure you want to delete this Supplier Record? This action cannot be undone.</p>
+                <form method="POST" action="" id="deleteForm">
+                    <input type="hidden" id="delete_sup_id" name="delete_sup_id" value="">
+                    <div class="confirm-buttons">
+                        <button type="submit" name="delete_sup" class="btn">Delete</button>
+                        <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
         <table>
             <thead>
@@ -489,31 +568,34 @@ if (isset($_GET['delete_sr'])) {
                     } else
                         $result = $conn->query("SELECT * FROM supplier");
 
-                    while ($row = $result->fetch_assoc()): ?>
+                    if ($result && $result->num_rows > 0):
+                        while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row["SupplierID"]) ?></td>
+                                <td><?= htmlspecialchars($row["SupplierName"]) ?></td>
+                                <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
+                                <td><?= htmlspecialchars($row["Address"]) ?></td>
+                                <td><?= htmlspecialchars($row["Email"]) ?></td>
+                                <td><?= htmlspecialchars($row["PhoneNumber"]) ?></td>
+                                <td class="actions-row">
+                                    <button class="btn"
+                                        onclick="showSupplierEditForm(
+                                        '<?= htmlspecialchars($row['SupplierID']) ?>',
+                                        '<?= htmlspecialchars($row['SupplierName']) ?>',
+                                        '<?= htmlspecialchars($row['SalesRepID']) ?>',
+                                        '<?= htmlspecialchars($row['Address']) ?>',
+                                        '<?= htmlspecialchars($row['Email']) ?>',
+                                        '<?= htmlspecialchars($row['PhoneNumber']) ?>'
+                                        )">Edit</button>
+                                    <button class="btn btn-danger" onclick="confirmDeleteSup('<?= htmlspecialchars($row['SupplierID']) ?>')">Delete</button>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?= htmlspecialchars($row["SupplierID"]) ?></td>
-                            <td><?= htmlspecialchars($row["SupplierName"]) ?></td>
-                            <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
-                            <td><?= htmlspecialchars($row["Address"]) ?></td>
-                            <td><?= htmlspecialchars($row["Email"]) ?></td>
-                            <td><?= htmlspecialchars($row["PhoneNumber"]) ?></td>
-                            <td class="actions-row">
-                                <button class="btn"
-                                    onclick="showSupplierEditForm(
-                                    '<?= htmlspecialchars($row['SupplierID']) ?>',
-                                    '<?= htmlspecialchars($row['SupplierName']) ?>',
-                                    '<?= htmlspecialchars($row['SalesRepID']) ?>',
-                                    '<?= htmlspecialchars($row['Address']) ?>',
-                                    '<?= htmlspecialchars($row['Email']) ?>',
-                                    '<?= htmlspecialchars($row['PhoneNumber']) ?>'
-                                    )">Edit</button>
-                                <nav class="topnav">
-                                    <a class="btn btn-danger" href="management.php?delete_supplier=<?= urlencode($row['SupplierID']) ?>"
-                                        onclick="return confirm('Are you sure you want to delete this Supplier?')">Delete</a>
-                                </nav>
-                            </td>
+                            <td colspan="6" style="color:gray;">No supplier records found.</td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="5" style="color:red;">Error: Table 'supplier' not found.</td>
@@ -550,7 +632,7 @@ if (isset($_GET['delete_sr'])) {
                     <label for="location_name">Location Name</label>
                     <input type="text" id="location_name" name="location_name" />
 
-                    <button class="btn" type="submit" name="create_location" onclick="alert('Location Record Created.')">Create</button>
+                    <button class="btn" type="submit" name="create_location">Create</button>
                 </form>
             </div>
             <!-- This is the location record edit form-->
@@ -574,62 +656,80 @@ if (isset($_GET['delete_sr'])) {
                                 <input type="text" id="edit_location_name" name="edit_location_name" />
                             </div>
                         </div>
-                        <button class="btn" type="submit" name="update_location" onclick="alert('Changes saved.')">Save Changes</button>
+                        <button class="btn" type="submit" name="update_location">Save Changes</button>
                         <button class="btn btn-secondary" onclick="closeLocationEditForm()">Cancel</button>
                     </div>
                 </form>
             </div>
+            <!-- Confirmation Dialog -->
+            <div id="confirmDialog" class="confirm-dialog">
+                <div class="confirm-content">
+                    <h3>Confirm Delete</h3>
+                    <p>Are you sure you want to delete this Location Record? This action cannot be undone.</p>
+                    <form method="POST" action="" id="deleteForm">
+                        <input type="hidden" id="delete_loc_id" name="delete_loc_id" value="">
+                        <div class="confirm-buttons">
+                            <button type="submit" name="delete_loc" class="btn">Delete</button>
+                            <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
             <table>
-                <thead>
-                    <tr>
-                        <th>Location ID</th>
-                        <th>Location Address</th>
-                        <th>Location Type</th>
-                        <th>Location Name</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (table_exists($conn, 'locations')): ?>
-                        <?php
-                        $search = isset($_GET['location_search']) ? $_GET['location_search'] : '';
-                        if (!empty($search)) {
-                            $stmt = $conn->prepare("SELECT * FROM locations WHERE LocationID LIKE ?");
-                            $likeSearch = "%$search%";
-                            $stmt->bind_param("s", $likeSearch);
-                            $stmt->execute();
-                            $result = $stmt->get_result();
-                        } else
-                            $result = $conn->query("SELECT * FROM locations");
-
-                        while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($row["LocationID"]) ?></td>
-                                <td><?= htmlspecialchars($row["Address"]) ?></td>
-                                <td><?= htmlspecialchars($row["LocationType"]) ?></td>
-                                <td><?= htmlspecialchars($row["LocationName"]) ?></td>
-                                <td class="actions-row">
-                                    <button class="btn"
-                                        onclick="showLocationEditForm(
-                                        '<?= htmlspecialchars($row['LocationID']) ?>',
-                                        '<?= htmlspecialchars($row['Address']) ?>',
-                                        '<?= htmlspecialchars($row['LocationType']) ?>',
-                                        '<?= htmlspecialchars($row['LocationName']) ?>'
-                                    )">Edit</button>
-                                    <nav class="topnav">
-                                        <a class="btn btn-danger" href="management.php?delete_location=<?= urlencode($row['LocationID']) ?>"
-                                            onclick="return confirm('Are you sure you want to delete this Location?')">Delete</a>
-                                    </nav>
-                                </td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
+                <table>
+                    <thead>
                         <tr>
-                            <td colspan="5" style="color:red;">Error: Table 'locations' not found.</td>
+                            <th>Location ID</th>
+                            <th>Location Address</th>
+                            <th>Location Type</th>
+                            <th>Location Name</th>
+                            <th>Actions</th>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (table_exists($conn, 'locations')): ?>
+                            <?php
+                            $search = isset($_GET['location_search']) ? $_GET['location_search'] : '';
+                            if (!empty($search)) {
+                                $stmt = $conn->prepare("SELECT * FROM locations WHERE LocationID LIKE ?");
+                                $likeSearch = "%$search%";
+                                $stmt->bind_param("s", $likeSearch);
+                                $stmt->execute();
+                                $result = $stmt->get_result();
+                            } else
+                                $result = $conn->query("SELECT * FROM locations");
+
+                            if ($result && $result->num_rows > 0):
+                                while ($row = $result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($row["LocationID"]) ?></td>
+                                        <td><?= htmlspecialchars($row["Address"]) ?></td>
+                                        <td><?= htmlspecialchars($row["LocationType"]) ?></td>
+                                        <td><?= htmlspecialchars($row["LocationName"]) ?></td>
+                                        <td class="actions-row">
+                                            <button class="btn"
+                                                onclick="showLocationEditForm(
+                                            '<?= htmlspecialchars($row['LocationID']) ?>',
+                                            '<?= htmlspecialchars($row['Address']) ?>',
+                                            '<?= htmlspecialchars($row['LocationType']) ?>',
+                                            '<?= htmlspecialchars($row['LocationName']) ?>'
+                                        )">Edit</button>
+                                            <button class="btn btn-danger" onclick="confirmDeleteLoc('<?= htmlspecialchars($row['LocationID']) ?>')">Delete</button>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" style="color:gray;">No location records found.</td>
+                                </tr>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" style="color:red;">Error: Table 'locations' not found.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
     </div>
 
     <!-- SALES REPRESENTATIVE -->
@@ -659,7 +759,7 @@ if (isset($_GET['delete_sr'])) {
                 <label for="sales_phone_number">Phone Number</label>
                 <input type="text" id="sales_phone_number" name="sales_phone_number" required />
 
-                <button class="btn" type="submit" name="create_sr" onclick="alert('Sales Rep Created.')">Create</button>
+                <button class="btn" type="submit" name="create_sr">Create</button>
             </form>
         </div>
         <!-- This is the sales record edit form-->
@@ -683,10 +783,24 @@ if (isset($_GET['delete_sr'])) {
                         <label>Phone Number</label>
                         <input type="text" id="edit_sales_phone_number" name="edit_sales_phone_number" />
                     </div>
-                    <button class="btn" type="submit" name="update_sr" onclick="alert('Changes saved.')">Save Changes</button>
+                    <button class="btn" type="submit" name="update_sr">Save Changes</button>
                     <button class="btn btn-secondary" onclick="closeSalesEditForm()">Cancel</button>
                 </div>
             </form>
+        </div>
+        <!-- Confirmation Dialog -->
+        <div id="confirmDialog" class="confirm-dialog">
+            <div class="confirm-content">
+                <h3>Confirm Delete</h3>
+                <p>Are you sure you want to delete this Sales Rep Record? This action cannot be undone.</p>
+                <form method="POST" action="" id="deleteForm">
+                    <input type="hidden" id="delete_sales_id" name="delete_sales_id" value="">
+                    <div class="confirm-buttons">
+                        <button type="submit" name="delete_sales" class="btn">Delete</button>
+                        <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
         <table>
             <thead>
@@ -711,27 +825,30 @@ if (isset($_GET['delete_sr'])) {
                     } else
                         $result = $conn->query("SELECT * FROM SalesRepresentative");
 
-                    while ($row = $result->fetch_assoc()): ?>
+                    if ($result && $result->num_rows > 0):
+                        while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
+                                <td><?= htmlspecialchars($row["Name"]) ?></td>
+                                <td><?= htmlspecialchars($row["Email"]) ?></td>
+                                <td><?= htmlspecialchars($row["PhoneNumber"]) ?></td>
+                                <td class="actions-row">
+                                    <button class="btn"
+                                        onclick="showSalesEditForm(
+                                        '<?= htmlspecialchars($row['SalesRepID']) ?>',
+                                        '<?= htmlspecialchars($row['Name']) ?>',
+                                        '<?= htmlspecialchars($row['Email']) ?>',
+                                        '<?= htmlspecialchars($row['PhoneNumber']) ?>'
+                                        )">Edit</button>
+                                    <button class="btn btn-danger" onclick="confirmDeleteSales('<?= htmlspecialchars($row['SalesRepID']) ?>')">Delete</button>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?= htmlspecialchars($row["SalesRepID"]) ?></td>
-                            <td><?= htmlspecialchars($row["Name"]) ?></td>
-                            <td><?= htmlspecialchars($row["Email"]) ?></td>
-                            <td><?= htmlspecialchars($row["PhoneNumber"]) ?></td>
-                            <td class="actions-row">
-                                <button class="btn"
-                                    onclick="showSalesEditForm(
-                                    '<?= htmlspecialchars($row['SalesRepID']) ?>',
-                                    '<?= htmlspecialchars($row['Name']) ?>',
-                                    '<?= htmlspecialchars($row['Email']) ?>',
-                                    '<?= htmlspecialchars($row['PhoneNumber']) ?>'
-                                    )">Edit</button>
-                                <nav class="topnav">
-                                    <a class="btn btn-danger" href="management.php?delete_sr=<?= urlencode($row['SalesRepID']) ?>"
-                                        onclick="return confirm('Are you sure you want to delete this Purchase Order?')">Delete</a>
-                                </nav>
-                            </td>
+                            <td colspan="6" style="color:gray;">No sales rep records found.</td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="5" style="color:red;">Error: Table 'salesrepresentative' not found.</td>
@@ -821,18 +938,41 @@ if (isset($_GET['delete_sr'])) {
             document.getElementById('editLocationForm').style.display = 'none';
         }
 
-        // save the scroll position and prevent the page from reloading to the top
-        window.addEventListener("beforeunload", function() {
-            localStorage.setItem("scrollY", window.scrollY);
-        });
+        function confirmDeleteCust(cust_id) {
+            document.getElementById('delete_cust_id').value = cust_id;
 
-        window.addEventListener("load", function() {
-            const scrollY = localStorage.getItem("scrollY");
-            if (scrollY !== null) {
-                window.scrollTo(0, parseInt(scrollY));
-                localStorage.removeItem("scrollY");
-            }
-        });
+            document.getElementById('confirmDialog').style.display = 'flex';
+        }
+
+        function confirmDeleteSup(sup_id) {
+            document.getElementById('delete_sup_id').value = sup_id;
+
+            document.getElementById('confirmDialog').style.display = 'flex';
+        }
+
+        function confirmDeleteLoc(loc_id) {
+            document.getElementById('delete_loc_id').value = loc_id;
+
+            document.getElementById('confirmDialog').style.display = 'flex';
+        }
+
+        function confirmDeleteSales(sales_id) {
+            document.getElementById('delete_sales_id').value = sales_id;
+
+            document.getElementById('confirmDialog').style.display = 'flex';
+        }
+
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').style.display = 'none';
+        }
+
+        // Auto-hide notifications after 5 seconds
+        setTimeout(function() {
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach(function(notification) {
+                notification.style.display = 'none';
+            });
+        }, 5000);
     </script>
     </div>
 </body>

@@ -11,47 +11,55 @@ function table_exists($conn, $table_name)
     return $result && $result->num_rows > 0;
 }
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_po'])) {
-    $po_id = $_POST['po_id'];
-    $customer_id = $_POST['po_customer'];
-    $order_id = $_POST['order_id'];
-    $delivery_date = $_POST['delivery_date'];
-    $quantity = $_POST['quantity'];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST['create_po'])) {
+        $po_id = $_POST['po_id'];
+        $customer_id = $_POST['po_customer'];
+        $order_id = $_POST['order_id'];
+        $delivery_date = $_POST['delivery_date'];
+        $quantity = $_POST['quantity'];
 
-    $stmt = $conn->prepare("INSERT INTO PurchaseOrders (POID, CustomerID, OrderID, DeliveryDate, Quantity) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssi", $po_id, $customer_id, $order_id, $delivery_date, $quantity);
-    $stmt->execute();
-    $stmt->close();
+        $stmt = $conn->prepare("INSERT INTO PurchaseOrders (POID, CustomerID, OrderID, DeliveryDate, Quantity) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssi", $po_id, $customer_id, $order_id, $delivery_date, $quantity);
+        
+        if ($stmt->execute())
+            $successMessage = "Purchase Order created successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+    
+        $stmt->close();
+    }
 
-    header("Location: purchaseorder.php");
-    exit;
-}
+    if (isset($_POST['update_po'])) {
+        $po_id = $_POST['edit_po_id'];
+        $customer_id = $_POST['edit_po_customer'];
+        $delivery_date = $_POST['edit_delivery_date'];
+        $quantity = $_POST['edit_quantity'];
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_po'])) {
-    $po_id = $_POST['edit_po_id'];
-    $customer_id = $_POST['edit_po_customer'];
-    $delivery_date = $_POST['edit_delivery_date'];
-    $quantity = $_POST['edit_quantity'];
+        $stmt = $conn->prepare("UPDATE PurchaseOrders SET CustomerID=?, DeliveryDate=?, Quantity=? WHERE POID=?");
+        $stmt->bind_param("ssis", $customer_id, $delivery_date, $quantity, $po_id);
 
-    $stmt = $conn->prepare("UPDATE PurchaseOrders SET CustomerID=?, DeliveryDate=?, Quantity=? WHERE POID=?");
-    $stmt->bind_param("ssis", $customer_id, $delivery_date, $quantity, $po_id);
-    $stmt->execute();
-    $stmt->close();
+        if ($stmt->execute())
+            $successMessage = "Purchase Order updated successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+    
+        $stmt->close();
+    }
 
-    header("Location: purchaseorder.php");
-    exit;
-}
+    if (isset($_POST['delete_po'])) {
+        $po_id = $_POST['delete_po_id'];
 
-if (isset($_GET['delete_po'])) {
-    $po_id = $_GET['delete_po'];
+        $stmt = $conn->prepare("DELETE FROM PurchaseOrders WHERE POID = ?");
+        $stmt->bind_param("s", $po_id);
 
-    $stmt = $conn->prepare("DELETE FROM PurchaseOrders WHERE POID = ?");
-    $stmt->bind_param("s", $po_id);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: purchaseorder.php");
-    exit;
+        if ($stmt->execute())
+            $successMessage = "Purchase Order deleted successfully!";
+        else
+            $errorMessage = "Error: " . $stmt->error;
+        
+        $stmt->close();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -77,6 +85,15 @@ if (isset($_GET['delete_po'])) {
 
     <div class="dashboard">
         <h1>Purchase Orders</h1>
+
+        <?php if(isset($successMessage)): ?>
+            <div class="notification success"><?php echo $successMessage; ?></div>
+        <?php endif; ?>
+        
+        <?php if(isset($errorMessage)): ?>
+            <div class="notification error"><?php echo $errorMessage; ?></div>
+        <?php endif; ?>
+
         <div class="actions">
             <button class="btn" onclick="showCreateForm()">Create Purchase Order</button>
             <form method="GET">
@@ -104,7 +121,7 @@ if (isset($_GET['delete_po'])) {
                 <label for="quantity">Quantity</label>
                 <input type="number" id="quantity" name="quantity" required />
 
-                <button class="btn" type="submit" name="create_po" onclick="alert('PO Created.')">Create</button>
+                <button class="btn" type="submit" name="create_po">Create</button>
             </form>
         </div>
         <!-- This is the PO edit form-->
@@ -132,10 +149,24 @@ if (isset($_GET['delete_po'])) {
                         <label>Quantity</label>
                         <input type="number" id="edit_quantity" name="edit_quantity" />
                     </div>
-                    <button class="btn" type="submit" name="update_po" onclick="alert('Changes saved.')">Save Changes</button>
+                    <button class="btn" type="submit" name="update_po">Save Changes</button>
                     <button class="btn btn-secondary" onclick="closeEditForm()">Cancel</button>
                 </div>
             </form>
+        </div>
+        <!-- Confirmation Dialog -->
+        <div id="confirmDialog" class="confirm-dialog">
+            <div class="confirm-content">
+                <h3>Confirm Delete</h3>
+                <p>Are you sure you want to delete this Purchase Order? This action cannot be undone.</p>
+                <form method="POST" action="" id="deleteForm">
+                    <input type="hidden" id="delete_po_id" name="delete_po_id" value="">
+                    <div class="confirm-buttons">
+                        <button type="submit" name="delete_po" class="btn">Delete</button>
+                        <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
         <table>
             <thead>
@@ -161,29 +192,30 @@ if (isset($_GET['delete_po'])) {
                     } else
                         $result = $conn->query("SELECT * FROM PurchaseOrders");
 
-                    while ($row = $result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row["POID"]) ?></td>
-                            <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
-                            <td><?= htmlspecialchars($row["OrderID"]) ?></td>
-                            <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
-                            <td><?= htmlspecialchars($row["Quantity"]) ?></td>
-                            <td class="actions-row">
-                                <button class="btn"
-                                    onclick="showEditForm(
-                                    '<?= htmlspecialchars($row['POID']) ?>',
-                                    '<?= htmlspecialchars($row['CustomerID']) ?>',
-                                    '<?= htmlspecialchars($row['OrderID']) ?>',
-                                    '<?= htmlspecialchars($row['DeliveryDate']) ?>',
-                                    '<?= htmlspecialchars($row['Quantity']) ?>'
-                                    )">Edit</button>
-                                <nav class="topnav">
-                                    <a class="btn btn-danger" href="purchaseorder.php?delete_po=<?= urlencode($row['POID']) ?>"
-                                        onclick="return confirm('Are you sure you want to delete this Purchase Order?')">Delete</a>
-                                </nav>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
+                    if ($result && $result->num_rows > 0):
+                        while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row["POID"]) ?></td>
+                                <td><?= htmlspecialchars($row["CustomerID"]) ?></td>
+                                <td><?= htmlspecialchars($row["OrderID"]) ?></td>
+                                <td><?= htmlspecialchars($row["DeliveryDate"]) ?></td>
+                                <td><?= htmlspecialchars($row["Quantity"]) ?></td>
+                                <td class="actions-row">
+                                    <button class="btn"
+                                        onclick="showEditForm(
+                                        '<?= htmlspecialchars($row['POID']) ?>',
+                                        '<?= htmlspecialchars($row['CustomerID']) ?>',
+                                        '<?= htmlspecialchars($row['OrderID']) ?>',
+                                        '<?= htmlspecialchars($row['DeliveryDate']) ?>',
+                                        '<?= htmlspecialchars($row['Quantity']) ?>'
+                                        )">Edit</button>
+                                    <button class="btn btn-danger" onclick="confirmDelete('<?= htmlspecialchars($row['POID']) ?>')">Delete</button>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="6" style="color:gray;">No purchase orders found.</td></tr>
+                    <?php endif; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="5" style="color:red;">Error: Table 'purchaseorders' not found.</td>
@@ -211,18 +243,22 @@ if (isset($_GET['delete_po'])) {
             document.getElementById('editForm').style.display = 'none';
         }
 
-        // save the scroll position and prevent the page from reloading to the top
-        window.addEventListener("beforeunload", function() {
-            localStorage.setItem("scrollY", window.scrollY);
-        });
+        function confirmDelete(po_id) {
+            document.getElementById('delete_po_id').value = po_id;
+            document.getElementById('confirmDialog').style.display = 'flex';
+        }
+        
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').style.display = 'none';
+        }
 
-        window.addEventListener("load", function() {
-            const scrollY = localStorage.getItem("scrollY");
-            if (scrollY !== null) {
-                window.scrollTo(0, parseInt(scrollY));
-                localStorage.removeItem("scrollY");
-            }
-        });
+        // Auto-hide notifications after 5 seconds
+        setTimeout(function() {
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach(function(notification) {
+                notification.style.display = 'none';
+            });
+        }, 5000);
     </script>
 </body>
 
