@@ -1,0 +1,6 @@
+location_id,location_name,location_type,address
+LOC01,Main Warehouse,Storage,101 Distribution Rd Dallas TX
+LOC02,East Side Depot,Storage,550 Commerce St Plano TX
+LOC03,Central Receiving,Receiving,2200 Logistics Ln Frisco TX
+LOC04,Overflow Storage,Storage,875 Industrial Blvd Irving TX
+LOC05,Retail Prep Center,Processing,430 Retail Park Carrollton TX
