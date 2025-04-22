@@ -141,49 +141,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartStock ERP</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Additional styles for notifications */
-        .notification {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        /* Style for confirmation dialog */
-        .confirm-dialog {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .confirm-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            width: 300px;
-            text-align: center;
-        }
-        .confirm-buttons {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-around;
-        }
-    </style>
 </head>
 
 <body>

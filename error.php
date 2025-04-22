@@ -15,14 +15,25 @@
 
         switch ($code) {
             case 'fk_customer_salesrep':
-                echo "<p>Customer creation failed: The Sales Rep ID you entered does not exist.</p>";
+                echo "<p>Customer Record creation failed: The Sales Rep ID you entered does not exist.</p>";
+                $link = "management.php";
                 break;
             case 'fk_supplier_salesrep':
-                echo "<p>Supplier creation failed: The Sales Rep ID you entered does not exist.</p>";
+                echo "<p>Supplier Reocrd creation failed: The Sales Rep ID you entered does not exist.</p>";
+                $link = "management.php";
                 break;
-                case 'fk_transfer_order_item_id':
-                    echo "<p>Transfer Order creation failed: The Item ID you entered does not exist.</p>";
-                    break;
+            case 'fk_transfer_order_item_id':
+                echo "<p>Transfer Order creation failed: The Item ID you entered does not exist.</p>";
+                $link = "transferorder.php";
+                break;
+            case 'fk_transfer_from_location':
+                echo "<p>Transfer Order creation failed: The From Location ID you entered does not exist.</p>";
+                $link = "transferorder.php";
+                break;
+            case 'fk_transfer_to_location':
+                echo "<p>Transfer Order creation failed: The To Location ID you entered does not exist.</p>";
+                $link = "transferorder.php";
+                break;
             case 'unknown':
             default:
                 echo "<p>An unexpected error occurred.</p>";
@@ -33,7 +44,7 @@
         }
         ?>
         <nav class="topnav">
-            <a href="management.php" class="btn">Back to Management</a>
+            <a href="<?= $link ?>" class="btn">Go Back</a>
         </nav>
     </div>
 </body>
