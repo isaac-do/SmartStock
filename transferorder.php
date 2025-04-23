@@ -107,6 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <div class="titletext"><strong>SmartStock ERP</strong></div>
         <nav class="topnav">
             <a href="index.php">Dashboard</a>
+            <a href="orderitems.php">Create Orders</a>
             <a href="inventory.php">Inventory</a>
             <a href="purchaseorder.php">Purchase Orders</a>
             <a href="transferorder.php">Transfer Orders</a>

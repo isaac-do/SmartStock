@@ -34,6 +34,10 @@
                 echo "<p>Transfer Order creation failed: The To Location ID you entered does not exist.</p>";
                 $link = "transferorder.php";
                 break;
+            case 'fk_order_items_id':
+                echo "<p>Order creation failed: The Item ID you entered does not exist.</p>";
+                $link = "orderitems.php";
+                break;
             case 'unknown':
             default:
                 echo "<p>An unexpected error occurred.</p>";
