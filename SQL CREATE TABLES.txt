@@ -1,0 +1,80 @@
+-- Table: SalesRepresentative
+CREATE TABLE SalesRepresentative (
+SalesRepID VARCHAR(20) PRIMARY KEY,
+Name VARCHAR(100),
+Email VARCHAR(100),
+PhoneNumber VARCHAR(20)
+);
+-- Table: Supplier
+CREATE TABLE Supplier (
+SupplierID VARCHAR(20) PRIMARY KEY,
+SupplierName VARCHAR(100),
+SalesRepID VARCHAR(20),
+Address VARCHAR(200),
+Email VARCHAR(100),
+PhoneNumber VARCHAR(20),
+FOREIGN KEY (SalesRepID) REFERENCES SalesRepresentative(SalesRepID) ON DELETE SET NULL
+);
+-- Table: Location
+CREATE TABLE Locations (
+LocationID VARCHAR(20) PRIMARY KEY,
+LocationName VARCHAR(100),
+LocationType VARCHAR(50),
+Address VARCHAR(200)
+);
+-- Table: Items
+CREATE TABLE Items (
+ItemID VARCHAR(20) PRIMARY KEY,
+ItemName VARCHAR(100),
+ItemType VARCHAR(50),
+LocationID VARCHAR(20),
+PurchasePrice DECIMAL(10,2),
+OnHandQuantity INT,
+SupplierID VARCHAR(20),
+SKU VARCHAR(50),
+UPC VARCHAR(50),
+FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE SET NULL,
+FOREIGN KEY (LocationID) REFERENCES Locations(LocationID) ON DELETE SET NULL
+);
+-- Table: OrderItems
+CREATE TABLE OrderItems (
+OrderID VARCHAR(20),
+ItemID VARCHAR(20),
+UnitPrice DECIMAL(10,2),
+QuantityOrdered INT,
+PRIMARY KEY (OrderID, ItemID),
+FOREIGN KEY (ItemID) REFERENCES Items(ItemID) ON DELETE NO ACTION
+);
+-- Table: Customers
+CREATE TABLE Customer (
+CustomerID VARCHAR(20) PRIMARY KEY,
+CompanyName VARCHAR(100),
+CustomerType VARCHAR(50),
+SalesRepID VARCHAR(20),
+BillingAddress VARCHAR(200),
+ShippingAddress VARCHAR(200),
+Email VARCHAR(100),
+PhoneNumber VARCHAR(20),
+FOREIGN KEY (SalesRepID) REFERENCES SalesRepresentative(SalesRepID) ON DELETE SET NULL
+);
+-- Table: PurchaseOrders
+CREATE TABLE PurchaseOrders (
+POID VARCHAR(20) PRIMARY KEY,
+CustomerID VARCHAR(20),
+OrderID VARCHAR(20),
+DeliveryDate DATE,
+Quantity INT,
+FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID) ON DELETE SET NULL
+);
+-- Table: TransferOrders
+CREATE TABLE TransferOrders (
+TransferID VARCHAR(20) PRIMARY KEY,
+TransferDate DATE,
+FromLocation VARCHAR(20),
+ToLocation VARCHAR(20),
+ItemID VARCHAR(20),
+Quantity INT,
+FOREIGN KEY (ItemID) REFERENCES Items(ItemID) ON DELETE CASCADE,
+FOREIGN KEY (FromLocation) REFERENCES Locations(LocationID) ON DELETE SET NULL,
+FOREIGN KEY (ToLocation) REFERENCES Locations(LocationID) ON DELETE SET NULL
+);
