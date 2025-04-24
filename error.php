@@ -14,28 +14,44 @@
         $msg = $_GET['msg'] ?? '';
 
         switch ($code) {
-            case 'fk_customer_salesrep':
+            case 'fk_customer_salesrep_creation':
                 echo "<p>Customer Record creation failed: The Sales Rep ID you entered does not exist.</p>";
                 $link = "management.php";
                 break;
-            case 'fk_supplier_salesrep':
+            case 'fk_supplier_salesrep_creation':
                 echo "<p>Supplier Reocrd creation failed: The Sales Rep ID you entered does not exist.</p>";
                 $link = "management.php";
                 break;
-            case 'fk_transfer_order_item_id':
+            case 'fk_customer_salesrep_edit':
+                echo "<p>Customer Record edit failed: The Sales Rep ID you entered does not exist.</p>";
+                $link = "management.php";
+                break;
+            case 'fk_supplier_salesrep_edit':
+                echo "<p>Supplier Reocrd edit failed: The Sales Rep ID you entered does not exist.</p>";
+                $link = "management.php";
+                break;
+            case 'fk_transfer_order_item_id_creation':
                 echo "<p>Transfer Order creation failed: The Item ID you entered does not exist.</p>";
                 $link = "transferorder.php";
                 break;
-            case 'fk_transfer_from_location':
-                echo "<p>Transfer Order creation failed: The From Location ID you entered does not exist.</p>";
+            case 'fk_transfer_location_creation':
+                echo "<p>Transfer Order creation failed: The Location ID you entered does not exist.</p>";
                 $link = "transferorder.php";
                 break;
-            case 'fk_transfer_to_location':
-                echo "<p>Transfer Order creation failed: The To Location ID you entered does not exist.</p>";
+            case 'fk_transfer_order_item_id_edit':
+                echo "<p>Transfer Order edit failed: The Item ID you entered does not exist.</p>";
                 $link = "transferorder.php";
                 break;
-            case 'fk_order_items_id':
+            case 'fk_transfer_location_edit':
+                echo "<p>Transfer Order edit failed: The Location ID you entered does not exist.</p>";
+                $link = "transferorder.php";
+                break;
+            case 'fk_order_items_id_creation':
                 echo "<p>Order creation failed: The Item ID you entered does not exist.</p>";
+                $link = "orderitems.php";
+                break;
+            case 'fk_order_items_id_edit':
+                echo "<p>Order edit failed: The Item ID you entered does not exist.</p>";
                 $link = "orderitems.php";
                 break;
             case 'unknown':
