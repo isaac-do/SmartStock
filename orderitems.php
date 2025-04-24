@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 // Foreign key checks
                 if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-                    header("Order: error.php?code=fk_order_items_id_creation");
+                    header("Location: error.php?code=fk_order_items_id_creation");
                     exit;
                 }
 
@@ -63,10 +63,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Foreign key checks
         if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-            header("Order: error.php?code=fk_order_items_id_edit");
+            header("Location: error.php?code=fk_order_items_id_edit");
             exit;
         }
-
         $stmt = $conn->prepare("UPDATE OrderItems SET ItemID=?, UnitPrice=?, QuantityOrdered=? WHERE OrderID=? AND ItemID=?");
         $stmt->bind_param("sdiss", $item_id, $unit_price, $quantity_ordered, $order_id, $original_item_id);
 

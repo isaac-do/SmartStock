@@ -85,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $errorMessage = "Error: " . $stmt->error;
                 }
             } catch (mysqli_sql_exception $e) {
-                header("Inventory: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+                header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
                 exit;
             }
         } else {
