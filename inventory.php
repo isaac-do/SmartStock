@@ -5,6 +5,7 @@ if ($conn->connect_error)
     die("Connection failed: " . $conn->connect_error);
 
 // Check if table exists, if not create it and import CSV data
+/*
 $checkTable = $conn->query("SHOW TABLES LIKE 'inventory'");
 if ($checkTable->num_rows == 0) {
     $createTable = "CREATE TABLE inventory (
@@ -37,6 +38,7 @@ if ($checkTable->num_rows == 0) {
         }
     }
 }
+*/
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
