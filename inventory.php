@@ -173,9 +173,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     // Fetch all inventory Items on page load
 } else {
-    if (table_exists($conn, 'Items')) {
+    if (table_exists($conn, 'Items'))
         $result = $conn->query("SELECT * FROM Items ORDER BY ItemID");
-    }
 }
 ?>
 <!DOCTYPE html>
@@ -336,6 +335,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php if (table_exists($conn, 'Items')): ?>
                     <?php if (exists_in_table($conn, 'Items')): ?>
                         <?php
+                        if (!isset($result))
+                            $result = $conn->query("SELECT * FROM Items ORDER BY ItemID");
+
                         while ($row = $result->fetch_assoc()) {
                             echo "<tr>";
                             echo "<td>" . $row["ItemID"] . "</td>";
@@ -358,7 +360,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <tr>
                             <td colspan="6" style="color:gray;">No items found.</td>
                         </tr>
-                <?php endif; ?>
+                    <?php endif; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="5" style="color:red;">Error: Table 'Items' not found.</td>
