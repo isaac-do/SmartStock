@@ -13,21 +13,30 @@ function table_exists($conn, $table_name)
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['create_po'])) {
-        $po_id = $_POST['po_id'];
-        $customer_id = $_POST['po_customer'];
-        $order_id = $_POST['order_id'];
-        $delivery_date = $_POST['delivery_date'];
-        $quantity = $_POST['quantity'];
+        if (table_exists($conn, 'PurchaseOrders')) {
+            try {
+                $po_id = $_POST['po_id'];
+                $customer_id = $_POST['po_customer'];
+                $order_id = $_POST['order_id'];
+                $delivery_date = $_POST['delivery_date'];
+                $quantity = $_POST['quantity'];
 
-        $stmt = $conn->prepare("INSERT INTO PurchaseOrders (POID, CustomerID, OrderID, DeliveryDate, Quantity) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssi", $po_id, $customer_id, $order_id, $delivery_date, $quantity);
-        
-        if ($stmt->execute())
-            $successMessage = "Purchase Order created successfully!";
-        else
-            $errorMessage = "Error: " . $stmt->error;
-    
-        $stmt->close();
+                $stmt = $conn->prepare("INSERT INTO PurchaseOrders (POID, CustomerID, OrderID, DeliveryDate, Quantity) VALUES (?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssi", $po_id, $customer_id, $order_id, $delivery_date, $quantity);
+                
+                if ($stmt->execute())
+                    $successMessage = "Purchase Order created successfully!";
+                else
+                    $errorMessage = "Error: " . $stmt->error;
+            
+                $stmt->close();
+            } catch (mysqli_sql_exception $e) {
+                header("Purchase Orders: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+                exit;
+            }
+        } else {
+            $errorMessage = "Error: The 'PurchaseOrders' table does not exist.";
+        }
     }
 
     if (isset($_POST['update_po'])) {
@@ -181,7 +190,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </tr>
             </thead>
             <tbody>
-                <?php if (table_exists($conn, 'purchaseorders')): ?>
+                <?php if (table_exists($conn, 'PurchaseOrders')): ?>
                     <?php
                     $search = isset($_GET['po_search']) ? $_GET['po_search'] : '';
                     if (!empty($search)) {
@@ -219,7 +228,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <?php endif; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" style="color:red;">Error: Table 'purchaseorders' not found.</td>
+                        <td colspan="5" style="color:red;">Error: Table 'PurchaseOrders' not found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

@@ -22,42 +22,46 @@ function exists_in_table($conn, $table, $column, $value) {
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['create_to'])) {
-        try {
-            $to_id = $_POST['to_id'];
-            $transfer_date = $_POST['transfer_date'];
-            $from_location = $_POST['from_location'];
-            $to_location = $_POST['to_location'];
-            $item_id = $_POST['item_id'];
-            $quantity = $_POST['quantity'];
+        if (table_exists($conn, 'TransferOrders')) {
+            try {
+                $to_id = $_POST['to_id'];
+                $transfer_date = $_POST['transfer_date'];
+                $from_location = $_POST['from_location'];
+                $to_location = $_POST['to_location'];
+                $item_id = $_POST['item_id'];
+                $quantity = $_POST['quantity'];
 
-            // Foreign key checks
-            if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-                header("Location: error.php?code=fk_transfer_order_item_id_creation");
+                // Foreign key checks
+                if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
+                    header("Location: error.php?code=fk_transfer_order_item_id_creation");
+                    exit;
+                }
+                if (!exists_in_table($conn, "Locations", "LocationID", $from_location)) {
+                    header("Location: error.php?code=fk_transfer_location_creation");
+                    exit;
+                }
+                if (!exists_in_table($conn, "Locations", "LocationID", $to_location)) {
+                    header("Location: error.php?code=fk_transfer_location_creation");
+                    exit;
+                }
+
+                $stmt = $conn->prepare("INSERT INTO TransferOrders (TransferID, TransferDate, FromLocation, ToLocation, ItemID, Quantity) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssssi", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity);
+
+                if ($stmt->execute())
+                    $successMessage = "Transfer Order created successfully!";
+                else
+                    $errorMessage = "Error: " . $stmt->error;
+
+                $stmt->close();
+            } catch (mysqli_sql_exception $e) {
+                header("Transfer Orders: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
                 exit;
             }
-            if (!exists_in_table($conn, "Locations", "LocationID", $from_location)) {
-                header("Location: error.php?code=fk_transfer_location_creation");
-                exit;
-            }
-            if (!exists_in_table($conn, "Locations", "LocationID", $to_location)) {
-                header("Location: error.php?code=fk_transfer_location_creation");
-                exit;
-            }
-
-            $stmt = $conn->prepare("INSERT INTO TransferOrders (TransferID, TransferDate, FromLocation, ToLocation, ItemID, Quantity) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssi", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity);
-
-            if ($stmt->execute())
-                $successMessage = "Transfer Order created successfully!";
-            else
-                $errorMessage = "Error: " . $stmt->error;
-
-            $stmt->close();
-        } catch (mysqli_sql_exception $e) {
-            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
-            exit;
+        } else {
+            $errorMessage = "Error: The 'TransferOrders' table does not exist.";
         }
-    }
+    } 
 
     if (isset($_POST['update_to'])) {
         try {

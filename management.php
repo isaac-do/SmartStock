@@ -14,7 +14,8 @@ function table_exists($conn, $table_name)
 }
 
 // Check if the table has the entity
-function exists_in_table($conn, $table, $column, $value) {
+function exists_in_table($conn, $table, $column, $value)
+{
     $stmt = $conn->prepare("SELECT 1 FROM $table WHERE $column = ? LIMIT 1");
     $stmt->bind_param("s", $value);
     $stmt->execute();
@@ -25,34 +26,38 @@ function exists_in_table($conn, $table, $column, $value) {
 // CREATE CUSTOMER 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['create_customer'])) {
-        try {
-            $customer_id = $_POST['customer_id'];
-            $customer_name = $_POST['customer_name'];
-            $customer_type = $_POST['customer_type'];
-            $sales_rep_id = $_POST['cust_sales_rep_id'];
-            $billing_address = $_POST['cust_billing_address'];
-            $shipping_address = $_POST['cust_shipping_address'];
-            $email = $_POST['cust_email'];
-            $phone_number = $_POST['cust_phone_number'];
+        if (table_exists($conn, 'Customer')) {
+            try {
+                $customer_id = $_POST['customer_id'];
+                $customer_name = $_POST['customer_name'];
+                $customer_type = $_POST['customer_type'];
+                $sales_rep_id = $_POST['cust_sales_rep_id'];
+                $billing_address = $_POST['cust_billing_address'];
+                $shipping_address = $_POST['cust_shipping_address'];
+                $email = $_POST['cust_email'];
+                $phone_number = $_POST['cust_phone_number'];
 
-            // Foreign key checks
-            if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
-                header("Location: error.php?code=fk_customer_salesrep_creation");
+                // Foreign key checks
+                if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
+                    header("Location: error.php?code=fk_customer_salesrep_creation");
+                    exit;
+                }
+
+                $stmt = $conn->prepare("INSERT INTO Customer (CustomerID, CompanyName, CustomerType, SalesRepID, BillingAddress, ShippingAddress, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssss", $customer_id, $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number);
+
+                if ($stmt->execute())
+                    $successMessage = "Customer Record created successfully!";
+                else
+                    $errorMessage = "Error: " . $stmt->error;
+
+                $stmt->close();
+            } catch (mysqli_sql_exception $e) {
+                header("Customer: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
                 exit;
             }
-
-            $stmt = $conn->prepare("INSERT INTO Customer (CustomerID, CompanyName, CustomerType, SalesRepID, BillingAddress, ShippingAddress, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssssss", $customer_id, $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number);
-
-            if ($stmt->execute())
-                $successMessage = "Customer Record created successfully!";
-            else
-                $errorMessage = "Error: " . $stmt->error;
-
-            $stmt->close();
-        } catch (mysqli_sql_exception $e) {
-            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
-            exit;
+        } else {
+            $errorMessage = "Error: The 'Customer' table does not exist.";
         }
     }
 
@@ -101,20 +106,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // CREATE LOCATION 
     if (isset($_POST['create_location'])) {
-        $location_id = $_POST['location_id'];
-        $location_name = $_POST['location_name'];
-        $location_type = $_POST['location_type'];
-        $location_address = $_POST['location_address'];
+        if (table_exists($conn, 'Locations')) {
+            try {
+                $location_id = $_POST['location_id'];
+                $location_name = $_POST['location_name'];
+                $location_type = $_POST['location_type'];
+                $location_address = $_POST['location_address'];
 
-        $stmt = $conn->prepare("INSERT INTO locations (LocationID, LocationName, LocationType, Address) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $location_id, $location_name, $location_type, $location_address);
+                $stmt = $conn->prepare("INSERT INTO locations (LocationID, LocationName, LocationType, Address) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("ssss", $location_id, $location_name, $location_type, $location_address);
 
-        if ($stmt->execute())
-            $successMessage = "Location Record created successfully!";
-        else
-            $errorMessage = "Error: " . $stmt->error;
+                if ($stmt->execute())
+                    $successMessage = "Location Record created successfully!";
+                else
+                    $errorMessage = "Error: " . $stmt->error;
 
-        $stmt->close();
+                $stmt->close();
+            } catch (mysqli_sql_exception $e) {
+                header("Locations: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+                exit;
+            }
+        } else {
+            $errorMessage = "Error: The 'Locations' table does not exist.";
+        }
     }
 
     // UPDATE LOCATION 
@@ -152,32 +166,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // CREATE Supplier
     if (isset($_POST['create_supplier'])) {
-        try {
-            $supplier_id = $_POST['supplier_id'];
-            $supplier_name = $_POST['supplier_name'];
-            $sales_rep_id = $_POST['supp_sales_rep_id'];
-            $address = $_POST['supplier_address'];
-            $email = $_POST['supplier_email'];
-            $phone_number = $_POST['supplier_phone_number'];
+        if (table_exists($conn, 'Supplier')) {
+            try {
+                $supplier_id = $_POST['supplier_id'];
+                $supplier_name = $_POST['supplier_name'];
+                $sales_rep_id = $_POST['supp_sales_rep_id'];
+                $address = $_POST['supplier_address'];
+                $email = $_POST['supplier_email'];
+                $phone_number = $_POST['supplier_phone_number'];
 
-            $stmt = $conn->prepare("INSERT INTO supplier (SupplierID, SupplierName, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssss", $supplier_id, $supplier_name, $sales_rep_id, $address, $email, $phone_number);
+                $stmt = $conn->prepare("INSERT INTO supplier (SupplierID, SupplierName, SalesRepID, Address, Email, PhoneNumber) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssss", $supplier_id, $supplier_name, $sales_rep_id, $address, $email, $phone_number);
 
-            // Foreign key checks
-            if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
-                header("Location: error.php?code=fk_supplier_salesrep_creation");
+                // Foreign key checks
+                if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
+                    header("Location: error.php?code=fk_supplier_salesrep_creation");
+                    exit;
+                }
+
+                if ($stmt->execute())
+                    $successMessage = "Supplier Record created successfully!";
+                else
+                    $errorMessage = "Error: " . $stmt->error;
+
+                $stmt->close();
+            } catch (mysqli_sql_exception $e) {
+                header("Supplier: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
                 exit;
             }
-
-            if ($stmt->execute())
-                $successMessage = "Supplier Record created successfully!";
-            else
-                $errorMessage = "Error: " . $stmt->error;
-
-            $stmt->close();
-        } catch (mysqli_sql_exception $e) {
-            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
-            exit;
+        } else {
+            $errorMessage = "Error: The 'Supplier' table does not exist.";
         }
     }
 
@@ -224,20 +242,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (isset($_POST['create_sr'])) {
-        $sales_id = $_POST['sales_id'];
-        $name = $_POST['sales_name'];
-        $email = $_POST['sales_email'];
-        $phone_number = $_POST['sales_phone_number'];
+        if (table_exists($conn, 'SalesRepresentative')) {
+            try {
+                $sales_id = $_POST['sales_id'];
+                $name = $_POST['sales_name'];
+                $email = $_POST['sales_email'];
+                $phone_number = $_POST['sales_phone_number'];
 
-        $stmt = $conn->prepare("INSERT INTO SalesRepresentative (SalesRepID, Name, Email, PhoneNumber) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $sales_id, $name, $email, $phone_number);
+                $stmt = $conn->prepare("INSERT INTO SalesRepresentative (SalesRepID, Name, Email, PhoneNumber) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("ssss", $sales_id, $name, $email, $phone_number);
 
-        if ($stmt->execute())
-            $successMessage = "Sales Rep Record created successfully!";
-        else
-            $errorMessage = "Error: " . $stmt->error;
+                if ($stmt->execute())
+                    $successMessage = "Sales Rep Record created successfully!";
+                else
+                    $errorMessage = "Error: " . $stmt->error;
 
-        $stmt->close();
+                $stmt->close();
+            } catch (mysqli_sql_exception $e) {
+                header("SalesRep: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+                exit;
+            }
+        } else {
+            $errorMessage = "Error: The 'SalesRepresentative' table does not exist.";
+        }
     }
 
     if (isset($_POST['update_sr'])) {
@@ -390,7 +417,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </form>
             </div>
             <!-- Confirmation Dialog -->
-            <div id="confirmDialog" class="confirm-dialog">
+            <div id="confirmDialog_cust" class="confirm-dialog">
                 <div class="confirm-content">
                     <h3>Confirm Delete</h3>
                     <p>Are you sure you want to delete this Customer Record? This action cannot be undone.</p>
@@ -464,7 +491,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <?php endif; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" style="color:red;">Error: Table 'customer' not found.</td>
+                            <td colspan="5" style="color:red;">Error: Table 'Customer' not found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -543,7 +570,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </form>
         </div>
         <!-- Confirmation Dialog -->
-        <div id="confirmDialog" class="confirm-dialog">
+        <div id="confirmDialog_sup" class="confirm-dialog">
             <div class="confirm-content">
                 <h3>Confirm Delete</h3>
                 <p>Are you sure you want to delete this Supplier Record? This action cannot be undone.</p>
@@ -611,7 +638,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <?php endif; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" style="color:red;">Error: Table 'supplier' not found.</td>
+                        <td colspan="5" style="color:red;">Error: Table 'Supplier' not found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -675,7 +702,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </form>
             </div>
             <!-- Confirmation Dialog -->
-            <div id="confirmDialog" class="confirm-dialog">
+            <div id="confirmDialog_loc" class="confirm-dialog">
                 <div class="confirm-content">
                     <h3>Confirm Delete</h3>
                     <p>Are you sure you want to delete this Location Record? This action cannot be undone.</p>
@@ -693,9 +720,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <thead>
                         <tr>
                             <th>Location ID</th>
-                            <th>Location Address</th>
-                            <th>Location Type</th>
                             <th>Location Name</th>
+                            <th>Location Type</th>
+                            <th>Location Address</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -738,7 +765,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <?php endif; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5" style="color:red;">Error: Table 'locations' not found.</td>
+                                <td colspan="5" style="color:red;">Error: Table 'Locations' not found.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -802,7 +829,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </form>
         </div>
         <!-- Confirmation Dialog -->
-        <div id="confirmDialog" class="confirm-dialog">
+        <div id="confirmDialog_sales" class="confirm-dialog">
             <div class="confirm-content">
                 <h3>Confirm Delete</h3>
                 <p>Are you sure you want to delete this Sales Rep Record? This action cannot be undone.</p>
@@ -864,7 +891,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <?php endif; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" style="color:red;">Error: Table 'salesrepresentative' not found.</td>
+                        <td colspan="5" style="color:red;">Error: Table 'SalesRepresentative' not found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -954,29 +981,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         function confirmDeleteCust(cust_id) {
             document.getElementById('delete_cust_id').value = cust_id;
 
-            document.getElementById('confirmDialog').style.display = 'flex';
+            document.getElementById('confirmDialog_cust').style.display = 'flex';
         }
 
         function confirmDeleteSup(sup_id) {
             document.getElementById('delete_sup_id').value = sup_id;
 
-            document.getElementById('confirmDialog').style.display = 'flex';
+            document.getElementById('confirmDialog_sup').style.display = 'flex';
         }
 
         function confirmDeleteLoc(loc_id) {
             document.getElementById('delete_loc_id').value = loc_id;
 
-            document.getElementById('confirmDialog').style.display = 'flex';
+            document.getElementById('confirmDialog_loc').style.display = 'flex';
         }
 
         function confirmDeleteSales(sales_id) {
             document.getElementById('delete_sales_id').value = sales_id;
 
-            document.getElementById('confirmDialog').style.display = 'flex';
+            document.getElementById('confirmDialog_sales').style.display = 'flex';
         }
 
         function closeConfirmDialog() {
-            document.getElementById('confirmDialog').style.display = 'none';
+            // recursive do it lol so annoying to make a function for each close
+            const dialogs = document.querySelectorAll('[id^="confirmDialog"]');
+            dialogs.forEach(dialog => {
+                dialog.style.display = 'none';
+            });
         }
 
         // Auto-hide notifications after 5 seconds

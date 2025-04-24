@@ -54,6 +54,10 @@
                 echo "<p>Order edit failed: The Item ID you entered does not exist.</p>";
                 $link = "orderitems.php";
                 break;
+            case 'fk_items_id_delete':
+                echo "<p>Item delete failed: There are orders with this item!</p>";
+                $link = "inventory.php";
+                break;
             case 'unknown':
             default:
                 echo "<p>An unexpected error occurred.</p>";

@@ -17,10 +17,17 @@ function query_count($conn, $table)
     }
 }
 
-function query_tables($conn, $table)
+function query_tables($conn, $table, $orderBy = '', $limit = 0)
 {
     try {
-        return $conn->query("SELECT * FROM $table");
+        $query = "SELECT * FROM $table";
+        if ($orderBy !== '') {
+            $query .= " ORDER BY $orderBy DESC";
+        }
+        if ($limit > 0) {
+            $query .= " LIMIT $limit";
+        }
+        return $conn->query($query);
     } catch (mysqli_sql_exception $e) {
         return false;
     }
@@ -78,7 +85,7 @@ function query_tables($conn, $table)
                     </tr>
                 </thead>
                 <tbody>
-                    <?php $result = query_tables($conn, 'purchaseorders'); ?>
+                    <?php $result = query_tables($conn, 'purchaseorders', 'DeliveryDate', 5); ?>
                     <?php if ($result): ?>
                         <?php while ($row = $result->fetch_assoc()): ?>
                             <tr>
@@ -91,7 +98,7 @@ function query_tables($conn, $table)
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" style="color:red;">Error: Table 'purchaseorders' not found.</td>
+                            <td colspan="5" style="color:red;">Error: Table 'PurchaseOrders' not found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -111,7 +118,7 @@ function query_tables($conn, $table)
                     </tr>
                 </thead>
                 <tbody>
-                    <?php $result = query_tables($conn, 'transferorders'); ?>
+                    <?php $result = query_tables($conn, 'transferorders', 'TransferDate', 5); ?>
                     <?php if ($result): ?>
                         <?php while ($row = $result->fetch_assoc()): ?>
                             <tr>
@@ -125,7 +132,7 @@ function query_tables($conn, $table)
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" style="color:red;">Error: Table 'transferorders' not found.</td>
+                            <td colspan="5" style="color:red;">Error: Table 'TransferOrders' not found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
