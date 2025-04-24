@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Foreign key checks
             if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-                header("Location: error.php?code=fk_order_items_id");
+                header("Location: error.php?code=fk_order_items_id_creation");
                 exit;
             }
 
@@ -52,12 +52,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (isset($_POST['update_order'])) {
         $order_id = $_POST['edit_order_id'];
+        $original_item_id = $_POST['original_item_id'];
         $item_id = $_POST['edit_item_id'];
         $unit_price = $_POST['edit_unit_price'];
         $quantity_ordered = $_POST['edit_quantity_ordered'];
 
-        $stmt = $conn->prepare("UPDATE OrderItems SET ItemID=?, UnitPrice=?, QuantityOrdered=? WHERE OrderID=?");
-        $stmt->bind_param("sdis", $item_id, $unit_price, $quantity_ordered, $order_id);
+        // Foreign key checks
+        if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
+            header("Location: error.php?code=fk_order_items_id_edit");
+            exit;
+        }
+
+        $stmt = $conn->prepare("UPDATE OrderItems SET ItemID=?, UnitPrice=?, QuantityOrdered=? WHERE OrderID=? AND ItemID=?");
+        $stmt->bind_param("sdiss", $item_id, $unit_price, $quantity_ordered, $order_id, $original_item_id);
 
         if ($stmt->execute())
             $successMessage = "Order updated successfully!";
@@ -69,9 +76,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (isset($_POST['delete'])) {
         $order_id = $_POST['delete_order_id'];
+        $item_id = $_POST['delete_item_id'];
 
-        $stmt = $conn->prepare("DELETE FROM OrderItems WHERE OrderID = ?, ItemID = ?");
-        $stmt->bind_param("s", $order_id);
+        $stmt = $conn->prepare("DELETE FROM OrderItems WHERE OrderID = ? AND ItemID = ?");
+        $stmt->bind_param("ss", $order_id, $item_id);
 
         if ($stmt->execute())
             $successMessage = "Order deleted successfully!";
@@ -153,6 +161,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <label>Item ID</label>
                         <input type="text" id="edit_item_id" name="edit_item_id" />
                     </div>
+                    <!-- HIDDEN FOR PRIMARY KEY PURPOSES -->
+                    <input type="hidden" id="original_item_id" name="original_item_id" />
+
                     <div class="form-group">
                         <label>Unit Price</label>
                         <input type="number" id="edit_unit_price" name="edit_unit_price" step="0.01" />
@@ -173,6 +184,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <p>Are you sure you want to delete this Order? This action cannot be undone.</p>
                 <form method="POST" action="" id="deleteForm">
                     <input type="hidden" id="delete_order_id" name="delete_order_id" value="">
+                    <input type="hidden" id="delete_item_id" name="delete_item_id" value="">
                     <div class="confirm-buttons">
                         <button type="submit" name="delete" class="btn">Delete</button>
                         <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
@@ -217,7 +229,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                         '<?= number_format($row['UnitPrice'], 2) ?>',
                                         '<?= number_format($row['QuantityOrdered']) ?>'
                                         )">Edit</button>
-                                    <button class="btn btn-danger" onclick="confirmDelete('<?= htmlspecialchars($row['OrderID']) ?>')">Delete</button>
+                                    <button class="btn btn-danger" onclick="confirmDelete('<?= htmlspecialchars($row['OrderID']) ?>', '<?= htmlspecialchars($row['ItemID']) ?>')">Delete</button>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
@@ -242,6 +254,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         function showEditForm(order_id, item_id, unit_price, quantity_ordered) {
             document.getElementById('edit_order_id').value = order_id;
+            document.getElementById('original_item_id').value = item_id;
             document.getElementById('edit_item_id').value = item_id;
             document.getElementById('edit_unit_price').value = unit_price;
             document.getElementById('edit_quantity_ordered').value = quantity_ordered;
@@ -253,8 +266,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             document.getElementById('editForm').style.display = 'none';
         }
 
-        function confirmDelete(order_id) {
+        function confirmDelete(order_id, item_id) {
             document.getElementById('delete_order_id').value = order_id;
+            document.getElementById('delete_item_id').value = item_id;
             document.getElementById('confirmDialog').style.display = 'flex';
         }
 

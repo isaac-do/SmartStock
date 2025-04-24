@@ -32,15 +32,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Foreign key checks
             if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-                header("Location: error.php?code=fk_transfer_order_item_id");
+                header("Location: error.php?code=fk_transfer_order_item_id_creation");
                 exit;
             }
-            if (!exists_in_table($conn, "Location", "LocationID", $from_location)) {
-                header("Location: error.php?code=fk_transfer_from_location");
+            if (!exists_in_table($conn, "Locations", "LocationID", $from_location)) {
+                header("Location: error.php?code=fk_transfer_location_creation");
                 exit;
             }
-            if (!exists_in_table($conn, "Location", "LocationID", $to_location)) {
-                header("Location: error.php?code=fk_transfer_to_location");
+            if (!exists_in_table($conn, "Locations", "LocationID", $to_location)) {
+                header("Location: error.php?code=fk_transfer_location_creation");
                 exit;
             }
 
@@ -60,26 +60,45 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (isset($_POST['update_to'])) {
-        $to_id = $_POST['edit_to_id'];
-        $transfer_date = $_POST['edit_transfer_date'];
-        $from_location = $_POST['edit_from_location'];
-        $to_location = $_POST['edit_to_location'];
-        $item_id = $_POST['edit_item_id'];
-        $quantity = $_POST['edit_quantity'];
+        try {
+            $to_id = $_POST['edit_to_id'];
+            $transfer_date = $_POST['edit_transfer_date'];
+            $from_location = $_POST['edit_from_location'];
+            $to_location = $_POST['edit_to_location'];
+            $item_id = $_POST['edit_item_id'];
+            $quantity = $_POST['edit_quantity'];
 
-        $stmt = $conn->prepare("UPDATE TransferOrders SET TransferID=?, TransferDate=?, FromLocation=?, ToLocation=?, ItemID=?, Quantity=? WHERE TransferID=?");
-        $stmt->bind_param("sssssis", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity, $to_id);
+            // Foreign key checks
+            if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
+                header("Location: error.php?code=fk_transfer_order_item_id_edit");
+                exit;
+            }
+            if (!exists_in_table($conn, "Locations", "LocationID", $from_location)) {
+                header("Location: error.php?code=fk_transfer_location_edit");
+                exit;
+            }
+            if (!exists_in_table($conn, "Locations", "LocationID", $to_location)) {
+                header("Location: error.php?code=fk_transfer_location_edit");
+                exit;
+            }
 
-        if ($stmt->execute())
-            $successMessage = "Transfer Order updated successfully!";
-        else
-            $errorMessage = "Error: " . $stmt->error;
+            $stmt = $conn->prepare("UPDATE TransferOrders SET TransferID=?, TransferDate=?, FromLocation=?, ToLocation=?, ItemID=?, Quantity=? WHERE TransferID=?");
+            $stmt->bind_param("sssssis", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity, $to_id);
 
-        $stmt->close();
+            if ($stmt->execute())
+                $successMessage = "Transfer Order updated successfully!";
+            else
+                $errorMessage = "Error: " . $stmt->error;
+
+            $stmt->close();
+        } catch (mysqli_sql_exception $e) {
+            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+            exit;
+        }
     }
 
-    if (isset($_POST['delete'])) {
-        $to_id = $_POST['delete'];
+    if (isset($_POST['delete_to'])) {
+        $to_id = $_POST['delete_to_id'];
 
         $stmt = $conn->prepare("DELETE FROM TransferOrders WHERE TransferID = ?");
         $stmt->bind_param("s", $to_id);
@@ -88,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $successMessage = "Transfer Order deleted successfully!";
         else
             $errorMessage = "Error: " . $stmt->error;
-
+        
         $stmt->close();
     }
 }
@@ -198,9 +217,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <h3>Confirm Delete</h3>
                 <p>Are you sure you want to delete this Transfer Order? This action cannot be undone.</p>
                 <form method="POST" action="" id="deleteForm">
-                    <input type="hidden" id="delete_po_id" name="delete_po_id" value="">
+                    <input type="hidden" id="delete_to_id" name="delete_to_id" value="">
                     <div class="confirm-buttons">
-                        <button type="submit" name="delete_po" class="btn">Delete</button>
+                        <button type="submit" name="delete_to" class="btn">Delete</button>
                         <button type="button" onclick="closeConfirmDialog()" class="btn btn-secondary">Cancel</button>
                     </div>
                 </form>
@@ -286,8 +305,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             document.getElementById('editForm').style.display = 'none';
         }
 
-        function confirmDelete(po_id) {
-            document.getElementById('delete_po_id').value = po_id;
+        function confirmDelete(to_id) {
+            document.getElementById('delete_to_id').value = to_id;
             document.getElementById('confirmDialog').style.display = 'flex';
         }
 

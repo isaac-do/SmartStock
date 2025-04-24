@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Foreign key checks
             if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
-                header("Location: error.php?code=fk_customer_salesrep");
+                header("Location: error.php?code=fk_customer_salesrep_creation");
                 exit;
             }
 
@@ -66,6 +66,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $shipping_address = $_POST['edit_cust_ship_address'];
         $email = $_POST['edit_cust_email'];
         $phone_number = $_POST['edit_cust_phone_number'];
+
+        // Foreign key checks
+        if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
+            header("Location: error.php?code=fk_customer_salesrep_edit");
+            exit;
+        }
 
         $stmt = $conn->prepare("UPDATE Customer SET CompanyName=?, CustomerType=?, SalesRepID=?, BillingAddress=?, ShippingAddress=?, Email=?, PhoneNumber=? WHERE CustomerID=?");
         $stmt->bind_param("ssssssss", $customer_name, $customer_type, $sales_rep_id, $billing_address, $shipping_address, $email, $phone_number, $customer_id);
@@ -159,7 +165,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Foreign key checks
             if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
-                header("Location: error.php?code=fk_supplier_salesrep");
+                header("Location: error.php?code=fk_supplier_salesrep_creation");
                 exit;
             }
 
@@ -183,6 +189,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $address = $_POST['edit_supp_address'];
         $email = $_POST['edit_supp_email'];
         $phone_number = $_POST['edit_supp_phone_number'];
+
+        // Foreign key checks
+        if (!exists_in_table($conn, "SalesRepresentative", "SalesRepID", $sales_rep_id)) {
+            header("Location: error.php?code=fk_supplier_salesrep_edit");
+            exit;
+        }
 
         $stmt = $conn->prepare("UPDATE supplier SET SupplierName=?, SalesRepID=?, Address=?, Email=?, PhoneNumber=? WHERE SupplierID=?");
         $stmt->bind_param("ssssss", $supplier_name, $sales_rep_id, $address, $email, $phone_number, $supplier_id);
