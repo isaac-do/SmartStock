@@ -252,7 +252,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $stmt->execute();
                         $result = $stmt->get_result();
                     } else
-                        $result = $conn->query("SELECT * FROM TransferOrders");
+                        $result = $conn->query("SELECT * FROM TransferOrders ORDER BY TransferDate DESC");
                     if ($result && $result->num_rows > 0):
                         while ($row = $result->fetch_assoc()): ?>
                             <tr>

@@ -200,7 +200,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $stmt->execute();
                         $result = $stmt->get_result();
                     } else
-                        $result = $conn->query("SELECT * FROM PurchaseOrders");
+                        $result = $conn->query("SELECT * FROM PurchaseOrders ORDER BY DeliveryDate DESC");
 
                     if ($result && $result->num_rows > 0):
                         while ($row = $result->fetch_assoc()): ?>
