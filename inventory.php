@@ -21,7 +21,7 @@ if ($checkTable->num_rows == 0) {
     )";
     
     if ($conn->query($createTable) === TRUE) {
-        $csvFile = 'items.csv';
+        $csvFile = 'Items.csv';
         if (file_exists($csvFile)) {
             $file = fopen($csvFile, 'r');
             fgetcsv($file);
@@ -40,33 +40,59 @@ if ($checkTable->num_rows == 0) {
 }
 */
 
+// Check if tables exists
+function table_exists($conn, $table_name)
+{
+    $table_name_escaped = $conn->real_escape_string($table_name);
+    $result = $conn->query("SHOW TABLES LIKE '$table_name_escaped'");
+    return $result && $result->num_rows > 0;
+}
+
+// Check if the table has anything
+function exists_in_table($conn, $table)
+{
+    $stmt = $conn->prepare("SELECT 1 FROM $table LIMIT 1");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->num_rows > 0;
+}
+
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Create new item
     if (isset($_POST['create'])) {
-        $item_id = $_POST['item_id'];
-        $item_name = $_POST['item_name'];
-        $item_type = $_POST['item_type'];
-        $location_id = $_POST['item_location_id'];
-        $purchase_price = $_POST['purchase_price'];
-        $quantity = $_POST['quantity'];
-        $supplier_id = $_POST['supplier_id'];
-        $sku = $_POST['item_sku'];
-        $upc = $_POST['item_upc'];
-        
-        $sql = "INSERT INTO inventory 
-                (item_id, item_name, item_type, location_id, purchase_price, quantity, supplier_id, sku, upc) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssdisss", $item_id, $item_name, $item_type, $location_id, $purchase_price, $quantity, $supplier_id, $sku, $upc);
-        
-        if ($stmt->execute()) {
-            $successMessage = "Item created successfully!";
+        if (table_exists($conn, 'Items')) {
+            try {
+                $item_id = $_POST['item_id'];
+                $item_name = $_POST['item_name'];
+                $item_type = $_POST['item_type'];
+                $location_id = $_POST['item_location_id'];
+                $purchase_price = $_POST['purchase_price'];
+                $quantity = $_POST['quantity'];
+                $supplier_id = $_POST['supplier_id'];
+                $sku = $_POST['item_sku'];
+                $upc = $_POST['item_upc'];
+
+                $sql = "INSERT INTO Items 
+                        (ItemID, ItemName, ItemType, LocationID, PurchasePrice, OnHandQuantity, SupplierID, SKU, UPC) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("ssssdisss", $item_id, $item_name, $item_type, $location_id, $purchase_price, $quantity, $supplier_id, $sku, $upc);
+
+                if ($stmt->execute()) {
+                    $successMessage = "Item created successfully!";
+                } else {
+                    $errorMessage = "Error: " . $stmt->error;
+                }
+            } catch (mysqli_sql_exception $e) {
+                header("Inventory: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+                exit;
+            }
         } else {
-            $errorMessage = "Error: " . $stmt->error;
+            $errorMessage = "Error: The 'Items' table does not exist.";
         }
     }
-    
+
     // Update existing item
     if (isset($_POST['update'])) {
         $item_id = $_POST['edit_item_id'];
@@ -78,61 +104,78 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $supplier_id = $_POST['edit_supplier_id'];
         $sku = $_POST['edit_sku'];
         $upc = $_POST['edit_upc'];
-        
+
         // Remove currency symbol if present
         $purchase_price = str_replace('$', '', $purchase_price);
-        
-        $sql = "UPDATE inventory SET 
-                item_name = ?, 
-                item_type = ?, 
-                location_id = ?, 
-                purchase_price = ?, 
-                quantity = ?, 
-                supplier_id = ?, 
-                sku = ?, 
-                upc = ? 
-                WHERE item_id = ?";
+
+        $sql = "UPDATE Items SET 
+                ItemName = ?, 
+                ItemType = ?, 
+                LocationID = ?, 
+                PurchasePrice = ?, 
+                OnHandQuantity = ?, 
+                SupplierID = ?, 
+                SKU = ?, 
+                UPC = ? 
+                WHERE ItemID = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ssssissss", $item_name, $item_type, $location_id, $purchase_price, $quantity, $supplier_id, $sku, $upc, $item_id);
-        
+
         if ($stmt->execute()) {
             $successMessage = "Item updated successfully!";
         } else {
             $errorMessage = "Error: " . $stmt->error;
         }
     }
-    
+
     // Delete item
     if (isset($_POST['delete'])) {
         $item_id = $_POST['delete_item_id'];
-        
-        $sql = "DELETE FROM inventory WHERE item_id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $item_id);
-        
-        if ($stmt->execute()) {
-            $successMessage = "Item deleted successfully!";
+
+        // First check if the item exists in any orders
+        $check_sql = "SELECT COUNT(*) as OrderCount FROM OrderItems WHERE ItemID = ?";
+        $check_stmt = $conn->prepare($check_sql);
+        $check_stmt->bind_param("s", $item_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        $row = $check_result->fetch_assoc();
+
+        if ($row['OrderCount'] > 0) {
+            // Item is referenced in orders
+            $errorMessage = "Error: Cannot delete this item because it appears in one or more orders.";
         } else {
-            $errorMessage = "Error: " . $stmt->error;
+            $sql = "DELETE FROM Items WHERE ItemID = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $item_id);
+
+            if ($stmt->execute()) {
+                $successMessage = "Item deleted successfully!";
+            } else {
+                $errorMessage = "Error: " . $stmt->error;
+            }
         }
     }
-    
+
     // Handle search functionality
     if (isset($_POST['search'])) {
         $search_term = $_POST['search_term'];
-        $sql = "SELECT * FROM inventory WHERE item_id LIKE ? OR item_name LIKE ?";
-        $search_param = "%".$search_term."%";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $search_param, $search_param);
-        $stmt->execute();
-        $result = $stmt->get_result();
-    } else {
-        // Fetch all inventory items
-        $result = $conn->query("SELECT * FROM inventory ORDER BY item_id");
+        if (table_exists($conn, 'Items')) {
+            $sql = "SELECT * FROM Items WHERE ItemID LIKE ? OR ItemName LIKE ?";
+            $search_param = "%" . $search_term . "%";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ss", $search_param, $search_param);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result->num_rows == 0) {
+                $errorMessage = "No Items found matching your search.";
+            }
+        }
     }
+    // Fetch all inventory Items on page load
 } else {
-    // Fetch all inventory items on page load
-    $result = $conn->query("SELECT * FROM inventory ORDER BY item_id");
+    if (table_exists($conn, 'Items')) {
+        $result = $conn->query("SELECT * FROM Items ORDER BY ItemID");
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -150,7 +193,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="titletext"><strong>SmartStock ERP</strong></div>
         <nav class="topnav">
             <a href="index.php">Dashboard</a>
-            <a href="orderitems.php">Create Orders</a>
+            <a href="orderItems.php">Create Orders</a>
             <a href="inventory.php">Inventory</a>
             <a href="purchaseorder.php">Purchase Orders</a>
             <a href="transferorder.php">Transfer Orders</a>
@@ -159,15 +202,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </header>
     <div class="dashboard">
         <h1>Product Management</h1>
-        
-        <?php if(isset($successMessage)): ?>
+
+        <?php if (isset($successMessage)): ?>
             <div class="notification success"><?php echo $successMessage; ?></div>
         <?php endif; ?>
-        
-        <?php if(isset($errorMessage)): ?>
+
+        <?php if (isset($errorMessage)): ?>
             <div class="notification error"><?php echo $errorMessage; ?></div>
         <?php endif; ?>
-        
+
         <div class="actions">
             <button class="btn" onclick="showCreateForm()">Create Inventory Item</button>
             <form method="POST" action="" style="display: inline-block;">
@@ -211,7 +254,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button type="button" class="btn btn-secondary" onclick="hideCreateForm()">Cancel</button>
             </form>
         </div>
-        
+
         <!-- This is the inventory edit form-->
         <div id="editForm" class="modal-overlay" style="display: none;">
             <div class="modal-content">
@@ -258,7 +301,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </form>
             </div>
         </div>
-        
+
         <!-- Confirmation Dialog -->
         <div id="confirmDialog" class="confirm-dialog">
             <div class="confirm-content">
@@ -273,7 +316,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </form>
             </div>
         </div>
-        
+
         <table>
             <thead>
                 <tr>
@@ -290,29 +333,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </tr>
             </thead>
             <tbody>
-                <?php
-                if ($result->num_rows > 0) {
-                    while($row = $result->fetch_assoc()) {
-                        echo "<tr>";
-                        echo "<td>" . $row["item_id"] . "</td>";
-                        echo "<td>" . $row["item_name"] . "</td>";
-                        echo "<td>" . $row["item_type"] . "</td>";
-                        echo "<td>" . $row["location_id"] . "</td>";
-                        echo "<td>$" . number_format($row["purchase_price"], 2) . "</td>";
-                        echo "<td>" . $row["quantity"] . "</td>";
-                        echo "<td>" . $row["supplier_id"] . "</td>";
-                        echo "<td>" . $row["sku"] . "</td>";
-                        echo "<td>" . $row["upc"] . "</td>";
-                        echo "<td class='actions-row'>";
-                        echo "<button class='btn' onclick='showEditForm(\"" . $row["item_id"] . "\", \"" . $row["item_name"] . "\", \"" . $row["item_type"] . "\", \"" . $row["location_id"] . "\", \"" . number_format($row["purchase_price"], 2) . "\", \"" . $row["quantity"] . "\", \"" . $row["supplier_id"] . "\", \"" . $row["sku"] . "\", \"" . $row["upc"] . "\")'>Edit</button>";
-                        echo "<button class='btn' onclick='confirmDelete(\"" . $row["item_id"] . "\")'>Delete</button>";
-                        echo "</td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='10'>No items found</td></tr>";
-                }
-                ?>
+                <?php if (table_exists($conn, 'Items')): ?>
+                    <?php if (exists_in_table($conn, 'Items')): ?>
+                        <?php
+                        while ($row = $result->fetch_assoc()) {
+                            echo "<tr>";
+                            echo "<td>" . $row["ItemID"] . "</td>";
+                            echo "<td>" . $row["ItemName"] . "</td>";
+                            echo "<td>" . $row["ItemType"] . "</td>";
+                            echo "<td>" . $row["LocationID"] . "</td>";
+                            echo "<td>$" . number_format($row["PurchasePrice"], 2) . "</td>";
+                            echo "<td>" . $row["OnHandQuantity"] . "</td>";
+                            echo "<td>" . $row["SupplierID"] . "</td>";
+                            echo "<td>" . $row["SKU"] . "</td>";
+                            echo "<td>" . $row["UPC"] . "</td>";
+                            echo "<td class='actions-row'>";
+                            echo "<button class='btn' onclick='showEditForm(\"" . $row["ItemID"] . "\", \"" . $row["ItemName"] . "\", \"" . $row["ItemType"] . "\", \"" . $row["LocationID"] . "\", \"" . number_format($row["PurchasePrice"], 2) . "\", \"" . $row["OnHandQuantity"] . "\", \"" . $row["SupplierID"] . "\", \"" . $row["SKU"] . "\", \"" . $row["UPC"] . "\")'>Edit</button>";
+                            echo "<button class='btn' onclick='confirmDelete(\"" . $row["ItemID"] . "\")'>Delete</button>";
+                            echo "</td>";
+                            echo "</tr>";
+                        }
+                        ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" style="color:gray;">No items found.</td>
+                        </tr>
+                <?php endif; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" style="color:red;">Error: Table 'Items' not found.</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -321,7 +372,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             document.getElementById('createForm').style.display = 'block';
             document.getElementById('editForm').style.display = 'none';
         }
-        
+
         function hideCreateForm() {
             document.getElementById('createForm').style.display = 'none';
         }
@@ -342,16 +393,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         function closeEditForm() {
             document.getElementById('editForm').style.display = 'none';
         }
-        
+
         function confirmDelete(item_id) {
             document.getElementById('delete_item_id').value = item_id;
             document.getElementById('confirmDialog').style.display = 'flex';
         }
-        
+
         function closeConfirmDialog() {
             document.getElementById('confirmDialog').style.display = 'none';
         }
-        
+
         // Auto-hide notifications after 5 seconds
         setTimeout(function() {
             const notifications = document.querySelectorAll('.notification');

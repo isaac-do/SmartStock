@@ -23,30 +23,34 @@ function exists_in_table($conn, $table, $column, $value)
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['create_order'])) {
-        try {
-            $order_id = $_POST['order_id'];
-            $item_id = $_POST['item_id'];
-            $unit_price = $_POST['unit_price'];
-            $quantity_ordered = $_POST['quantity_ordered'];
+        if (table_exists($conn, 'OrderItems')) {
+            try {
+                $order_id = $_POST['order_id'];
+                $item_id = $_POST['item_id'];
+                $unit_price = $_POST['unit_price'];
+                $quantity_ordered = $_POST['quantity_ordered'];
 
-            // Foreign key checks
-            if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-                header("Location: error.php?code=fk_order_items_id_creation");
+                // Foreign key checks
+                if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
+                    header("Order: error.php?code=fk_order_items_id_creation");
+                    exit;
+                }
+
+                $stmt = $conn->prepare("INSERT INTO OrderItems (OrderID, ItemID, UnitPrice, QuantityOrdered) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("ssdi", $order_id, $item_id, $unit_price, $quantity_ordered);
+
+                if ($stmt->execute())
+                    $successMessage = "Order created successfully!";
+                else
+                    $errorMessage = "Error: " . $stmt->error;
+
+                $stmt->close();
+            } catch (mysqli_sql_exception $e) {
+                header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
                 exit;
             }
-
-            $stmt = $conn->prepare("INSERT INTO OrderItems (OrderID, ItemID, UnitPrice, QuantityOrdered) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssdi", $order_id, $item_id, $unit_price, $quantity_ordered);
-
-            if ($stmt->execute())
-                $successMessage = "Order created successfully!";
-            else
-                $errorMessage = "Error: " . $stmt->error;
-
-            $stmt->close();
-        } catch (mysqli_sql_exception $e) {
-            header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
-            exit;
+        } else {
+            $errorMessage = "Error: The 'OrderItems' table does not exist.";
         }
     }
 
@@ -59,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Foreign key checks
         if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-            header("Location: error.php?code=fk_order_items_id_edit");
+            header("Order: error.php?code=fk_order_items_id_edit");
             exit;
         }
 
@@ -104,7 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <div class="titletext"><strong>SmartStock ERP</strong></div>
         <nav class="topnav">
             <a href="index.php">Dashboard</a>
-            <a href="orderitems.php">Create Orders</a>
+            <a href="OrderItems.php">Create Orders</a>
             <a href="inventory.php">Inventory</a>
             <a href="purchaseorder.php">Purchase Orders</a>
             <a href="transferorder.php">Transfer Orders</a>
@@ -203,7 +207,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </tr>
             </thead>
             <tbody>
-                <?php if (table_exists($conn, 'orderitems')): ?>
+                <?php if (table_exists($conn, 'OrderItems')): ?>
                     <?php
                     $search = isset($_GET['search']) ? $_GET['search'] : '';
                     if (!empty($search)) {
@@ -214,6 +218,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $result = $stmt->get_result();
                     } else
                         $result = $conn->query("SELECT * FROM OrderItems");
+
                     if ($result && $result->num_rows > 0):
                         while ($row = $result->fetch_assoc()): ?>
                             <tr>
@@ -240,7 +245,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <?php endif; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" style="color:red;">Error: Table 'orderitems' not found.</td>
+                        <td colspan="5" style="color:red;">Error: Table 'OrderItems' not found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
