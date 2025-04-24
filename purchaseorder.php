@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             
                 $stmt->close();
             } catch (mysqli_sql_exception $e) {
-                header("Purchase Orders: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
+                header("Location: error.php?code=unknown&msg=" . urlencode($e->getMessage()));
                 exit;
             }
         } else {
