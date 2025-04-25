@@ -6,9 +6,17 @@ if ($conn->connect_error)
 // Check if tables exists
 function table_exists($conn, $table_name)
 {
-    $table_name_escaped = $conn->real_escape_string($table_name);
-    $result = $conn->query("SHOW TABLES LIKE '$table_name_escaped'");
+    $result = $conn->query("SHOW TABLES LIKE '$table_name'");
     return $result && $result->num_rows > 0;
+}
+
+// Check if the table has the entity
+function exists_in_table($conn, $table, $column, $value) {
+    $stmt = $conn->prepare("SELECT 1 FROM $table WHERE $column = ? LIMIT 1");
+    $stmt->bind_param("s", $value);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->num_rows > 0;
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -20,6 +28,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $order_id = $_POST['order_id'];
                 $delivery_date = $_POST['delivery_date'];
                 $quantity = $_POST['quantity'];
+
+                // Foreign key checks
+                if (!exists_in_table($conn, "Customer", "CustomerID", $customer_id)) {
+                    header("Location: error.php?code=fk_po_cust_id_create");
+                    exit;
+                }
 
                 $stmt = $conn->prepare("INSERT INTO PurchaseOrders (POID, CustomerID, OrderID, DeliveryDate, Quantity) VALUES (?, ?, ?, ?, ?)");
                 $stmt->bind_param("ssssi", $po_id, $customer_id, $order_id, $delivery_date, $quantity);

@@ -19,7 +19,7 @@
                 $link = "management.php";
                 break;
             case 'fk_supplier_salesrep_creation':
-                echo "<p>Supplier Reocrd creation failed: The Sales Rep ID you entered does not exist.</p>";
+                echo "<p>Supplier Record creation failed: The Sales Rep ID you entered does not exist.</p>";
                 $link = "management.php";
                 break;
             case 'fk_customer_salesrep_edit':
@@ -27,7 +27,7 @@
                 $link = "management.php";
                 break;
             case 'fk_supplier_salesrep_edit':
-                echo "<p>Supplier Reocrd edit failed: The Sales Rep ID you entered does not exist.</p>";
+                echo "<p>Supplier Record edit failed: The Sales Rep ID you entered does not exist.</p>";
                 $link = "management.php";
                 break;
             case 'fk_transfer_order_item_id_creation':
@@ -57,6 +57,22 @@
             case 'fk_items_id_delete':
                 echo "<p>Item delete failed: There are orders with this item!</p>";
                 $link = "inventory.php";
+                break;
+            case 'fk_items_id_create':
+                echo "<p>Item creation failed: The Supplier ID you entered does not exist.</p>";
+                $link = "inventory.php";
+                break;
+            case 'fk_items_id_update':
+                echo "<p>Item edit failed: The Supplier ID you entered does not exist.</p>";
+                $link = "inventory.php";
+                break;
+            case 'fk_po_cust_id_create':
+                echo "<p>Purchase Order creation failed: The Customer ID you entered does not exist.</p>";
+                $link = "purchaseorder.php";
+                break;
+            case 'fk_po_cust_id_update':
+                echo "<p>Purchase edit creation failed: The Customer ID you entered does not exist.</p>";
+                $link = "purchaseorder.php";
                 break;
             case 'unknown':
             default:

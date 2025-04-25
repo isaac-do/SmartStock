@@ -8,8 +8,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 // Check if tables exists
 function table_exists($conn, $table_name)
 {
-    $table_name_escaped = $conn->real_escape_string($table_name);
-    $result = $conn->query("SHOW TABLES LIKE '$table_name_escaped'");
+    $result = $conn->query("SHOW TABLES LIKE '$table_name'");
     return $result && $result->num_rows > 0;
 }
 

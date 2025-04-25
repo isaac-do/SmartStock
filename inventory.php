@@ -43,15 +43,23 @@ if ($checkTable->num_rows == 0) {
 // Check if tables exists
 function table_exists($conn, $table_name)
 {
-    $table_name_escaped = $conn->real_escape_string($table_name);
-    $result = $conn->query("SHOW TABLES LIKE '$table_name_escaped'");
+    $result = $conn->query("SHOW TABLES LIKE '$table_name'");
     return $result && $result->num_rows > 0;
 }
 
 // Check if the table has anything
-function exists_in_table($conn, $table)
+function has_data($conn, $table)
 {
     $stmt = $conn->prepare("SELECT 1 FROM $table LIMIT 1");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->num_rows > 0;
+}
+
+// Check if the table has the entity
+function exists_in_table($conn, $table, $column, $value) {
+    $stmt = $conn->prepare("SELECT 1 FROM $table WHERE $column = ? LIMIT 1");
+    $stmt->bind_param("s", $value);
     $stmt->execute();
     $result = $stmt->get_result();
     return $result->num_rows > 0;
@@ -72,6 +80,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $supplier_id = $_POST['supplier_id'];
                 $sku = $_POST['item_sku'];
                 $upc = $_POST['item_upc'];
+
+                // Foreign key checks
+                if (!exists_in_table($conn, "Supplier", "SupplierID", $supplier_id)) {
+                    header("Location: error.php?code=fk_items_id_create");
+                    exit;
+                }
 
                 $sql = "INSERT INTO Items 
                         (ItemID, ItemName, ItemType, LocationID, PurchasePrice, OnHandQuantity, SupplierID, SKU, UPC) 
@@ -333,7 +347,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </thead>
             <tbody>
                 <?php if (table_exists($conn, 'Items')): ?>
-                    <?php if (exists_in_table($conn, 'Items')): ?>
+                    <?php if (has_data($conn, 'Items')): ?>
                         <?php
                         if (!isset($result))
                             $result = $conn->query("SELECT * FROM Items ORDER BY ItemID");
