@@ -58,8 +58,12 @@
                 echo "<p>Item delete failed: There are orders with this item!</p>";
                 $link = "inventory.php";
                 break;
-            case 'fk_items_id_create':
+            case 'fk_items_id_sup_create':
                 echo "<p>Item creation failed: The Supplier ID you entered does not exist.</p>";
+                $link = "inventory.php";
+                break;
+            case 'fk_items_id_loc_create':
+                echo "<p>Item creation failed: The Location ID you entered does not exist.</p>";
                 $link = "inventory.php";
                 break;
             case 'fk_items_id_update':
@@ -71,7 +75,7 @@
                 $link = "purchaseorder.php";
                 break;
             case 'fk_po_cust_id_update':
-                echo "<p>Purchase edit creation failed: The Customer ID you entered does not exist.</p>";
+                echo "<p>Purchase Order edit failed: The Customer ID you entered does not exist.</p>";
                 $link = "purchaseorder.php";
                 break;
             case 'unknown':

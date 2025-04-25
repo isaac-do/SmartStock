@@ -59,6 +59,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $delivery_date = $_POST['edit_delivery_date'];
         $quantity = $_POST['edit_quantity'];
 
+        // Foreign key checks
+        if (!exists_in_table($conn, "Customer", "CustomerID", $customer_id)) {
+            header("Location: error.php?code=fk_po_cust_id_update");
+            exit;
+        }
+
         $stmt = $conn->prepare("UPDATE PurchaseOrders SET CustomerID=?, DeliveryDate=?, Quantity=? WHERE POID=?");
         $stmt->bind_param("ssis", $customer_id, $delivery_date, $quantity, $po_id);
 
@@ -154,7 +160,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="modal-content">
                     <h2>Edit Purchase Order</h2>
                     <div class="form-group">
-                        <label>PO ID</label>
+                        <label>PO ID [readonly]</label>
                         <input type="text" id="edit_po_id" name="edit_po_id" readonly />
                     </div>
                     <div class="form-group">

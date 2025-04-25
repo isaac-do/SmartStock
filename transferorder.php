@@ -31,10 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $quantity = $_POST['quantity'];
 
                 // Foreign key checks
-                if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-                    header("Location: error.php?code=fk_transfer_order_item_id_creation");
-                    exit;
-                }
                 if (!exists_in_table($conn, "Locations", "LocationID", $from_location)) {
                     header("Location: error.php?code=fk_transfer_location_creation");
                     exit;
@@ -43,7 +39,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     header("Location: error.php?code=fk_transfer_location_creation");
                     exit;
                 }
-
+                if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
+                    header("Location: error.php?code=fk_transfer_order_item_id_creation");
+                    exit;
+                }
+                
                 $stmt = $conn->prepare("INSERT INTO TransferOrders (TransferID, TransferDate, FromLocation, ToLocation, ItemID, Quantity) VALUES (?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("sssssi", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity);
 
@@ -72,10 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $quantity = $_POST['edit_quantity'];
 
             // Foreign key checks
-            if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
-                header("Location: error.php?code=fk_transfer_order_item_id_edit");
-                exit;
-            }
             if (!exists_in_table($conn, "Locations", "LocationID", $from_location)) {
                 header("Location: error.php?code=fk_transfer_location_edit");
                 exit;
@@ -84,6 +80,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: error.php?code=fk_transfer_location_edit");
                 exit;
             }
+            if (!exists_in_table($conn, "Items", "ItemID", $item_id)) {
+                header("Location: error.php?code=fk_transfer_order_item_id_edit");
+                exit;
+            }
+            
 
             $stmt = $conn->prepare("UPDATE TransferOrders SET TransferID=?, TransferDate=?, FromLocation=?, ToLocation=?, ItemID=?, Quantity=? WHERE TransferID=?");
             $stmt->bind_param("sssssis", $to_id, $transfer_date, $from_location, $to_location, $item_id, $quantity, $to_id);
@@ -186,7 +187,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="modal-content">
                     <h2>Edit Purchase Order</h2>
                     <div class="form-group">
-                        <label>Transfer ID</label>
+                        <label>Transfer ID [readonly]</label>
                         <input type="text" id="edit_to_id" name="edit_to_id" readonly />
                     </div>
                     <div class="form-group">

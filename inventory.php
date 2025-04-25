@@ -82,8 +82,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $upc = $_POST['item_upc'];
 
                 // Foreign key checks
+                if (!exists_in_table($conn, "Locations", "LocationID", $location_id)) {
+                    header("Location: error.php?code=fk_items_id_loc_create");
+                    exit;
+                }
+
+                // Foreign key checks
                 if (!exists_in_table($conn, "Supplier", "SupplierID", $supplier_id)) {
-                    header("Location: error.php?code=fk_items_id_create");
+                    header("Location: error.php?code=fk_items_id_sup_create");
                     exit;
                 }
 
@@ -274,7 +280,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h2>Edit Inventory Item</h2>
                 <form method="POST" action="">
                     <div class="form-group">
-                        <label>Item ID</label>
+                        <label>Item ID [readonly]</label>
                         <input type="text" id="edit_item_id" name="edit_item_id" readonly />
                     </div>
                     <div class="form-group">
